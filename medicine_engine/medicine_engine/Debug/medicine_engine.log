@@ -1,0 +1,17 @@
+﻿Build started 17.03.2012 1:09:39.
+     1>Project "C:\Users\1\Documents\Visual Studio 2010\Projects\medicine_engine\medicine_engine\medicine_engine.vcxproj" on node 2 (build target(s)).
+     1>PrepareForBuild:
+         Creating directory "C:\Users\1\Documents\Visual Studio 2010\Projects\medicine_engine\Debug\".
+       InitializeBuildStatus:
+         Creating "Debug\medicine_engine.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         moc -o main.cpp main.moc
+         :VCEnd
+         moc: main.moc: No such file
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppCommon.targets(103,5): error MSB3073: The command "moc -o main.cpp main.moc
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppCommon.targets(103,5): error MSB3073: :VCEnd" exited with code 1.
+     1>Done Building Project "C:\Users\1\Documents\Visual Studio 2010\Projects\medicine_engine\medicine_engine\medicine_engine.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:03.59

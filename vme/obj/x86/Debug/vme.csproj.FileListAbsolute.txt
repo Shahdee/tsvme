@@ -1,0 +1,29 @@
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\vme.Properties.Resources.resources
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\vme.Main.resources
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\bin\Debug\vme.exe
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\bin\Debug\vme.pdb
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\vme.exe
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\vme.pdb
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\vme.exe
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\vme.pdb
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\bin\Debug\vme.exe
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\bin\Debug\vme.pdb
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\vme.Main.resources
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\vme.Properties.Resources.resources
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Shahdee\Documents\Visual Studio 2010\Projects\vme\vme\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Debug\vme.Canvas.resources
+D:\tsvme\repo\vme\vme\bin\Debug\vme.exe
+D:\tsvme\repo\vme\vme\bin\Debug\vme.pdb
+D:\tsvme\repo\vme\vme\obj\x86\Debug\ResolveAssemblyReference.cache
+D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.Canvas.resources
+D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.Main.resources
+D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.Properties.Resources.resources
+D:\tsvme\repo\vme\vme\obj\x86\Debug\GenerateResource.read.1.tlog
+D:\tsvme\repo\vme\vme\obj\x86\Debug\GenerateResource.write.1.tlog
+D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.exe
+D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.pdb

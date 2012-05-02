@@ -1,0 +1,20 @@
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\vme.Canvas.resources
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\vme.Main.resources
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\vme.Properties.Resources.resources
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\GenerateResource.read.1.tlog
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\GenerateResource.write.1.tlog
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\bin\Release\vme.exe
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\bin\Release\vme.pdb
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\vme.exe
+C:\Users\1\documents\visual studio 2010\Projects\vme\vme\obj\x86\Release\vme.pdb
+D:\tsvme\repo\vme\vme\obj\x86\Release\vme.exe
+D:\tsvme\repo\vme\vme\obj\x86\Release\vme.pdb
+D:\tsvme\repo\vme\vme\bin\Release\vme.exe
+D:\tsvme\repo\vme\vme\bin\Release\vme.pdb
+D:\tsvme\repo\vme\vme\obj\x86\Release\ResolveAssemblyReference.cache
+D:\tsvme\repo\vme\vme\obj\x86\Release\vme.Canvas.resources
+D:\tsvme\repo\vme\vme\obj\x86\Release\vme.Main.resources
+D:\tsvme\repo\vme\vme\obj\x86\Release\vme.Properties.Resources.resources
+D:\tsvme\repo\vme\vme\obj\x86\Release\GenerateResource.read.1.tlog
+D:\tsvme\repo\vme\vme\obj\x86\Release\GenerateResource.write.1.tlog

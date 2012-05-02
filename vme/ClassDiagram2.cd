@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="vme.Canvas" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQJIgAFCAKAAFwMARoSIABBqAGBgAAAQEBIbAMAASBk=</HashCode>
+      <FileName>Canvas.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.DicomDecoder" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>tXWEaTkJCzlwYSWjVFKUZsAiCJ3AW0BAxAdICQmIP+w=</HashCode>
+      <FileName>DicomDecoder.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.DicomDictionary" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DicomDictionary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.JpegDecode">
+    <Position X="7.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAIAAAAAAAAAAAAAABAAAAAE=</HashCode>
+      <FileName>JpegDecode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.JpegDictionary">
+    <Position X="10.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JpegDictionary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.JpgParameters">
+    <Position X="9" Y="2.5" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="vme.JpgParameters.Frame" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>JpgParameters.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="vme.JpgParameters.Scan" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>JpgParameters.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>JpgParameters.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.Main" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAoAAREAiEAMAAAAACAgAACAAAAAIAAAAABiAAAAAA=</HashCode>
+      <FileName>Main.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.Program" Collapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.SystemClasses" Collapsed="true">
+    <Position X="4" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SystemClasses.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.SystemFunctions" Collapsed="true">
+    <Position X="5.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SystemFunctions.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.WindowLevelGraphControl" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>WindowLevelGraphControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.Properties.Resources" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="vme.Properties.Settings" Collapsed="true">
+    <Position X="2.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="vme.HuffmanTree" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SystemFunctions.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Enum Name="vme.Marker" Collapsed="true">
+    <Position X="2.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAE=</HashCode>
+      <FileName>JpegDecode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="vme.Imagebpp" Collapsed="true">
+    <Position X="0.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAACAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Main.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
