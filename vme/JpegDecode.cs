@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.InteropServices;
+
 
 namespace vme
 {
@@ -147,50 +149,29 @@ namespace vme
         
         }
 
-        private void GenerateHuffSizeTable() 
-        {
-            byte k = 0;
-            byte l = 1;
-            byte j = 1; // j=1 &!
-            byte lastk;
-            property.huffsize = new List<byte>();
+         /* Построение дерева Хаффмана для двух таблиц*/
+        /* Алгоритм:  в каком бы мы узле не находились, всегда пытаемся добавить значение в левую ветвь.
+         * А если она занята, то в правую. А если и там нет места, то возвращаемся на уровень выше, и пробуем оттуда.
+         * Остановиться надо на уровне равном длине кода. Левым ветвям соответствует значение 0, правым 1.  */
 
-            while (l < 16)
-            {
-                if (j > property.lll[l])  // if j>bits(j)
-                {
-                    l++;
-                    j = 1;
-                    
-                    
-                }
-                else
-                {
-                    property.huffsize.Add(l);
-                    k++;
-                    j++;
-                    continue;
-                }
+        /*Не нужно каждый раз начинать с вершины. Добавила значение - вернись на уровень выше.
+         * Правая ветвь существует? Если да, то иду опять вверх.
+         * Если нет, то создаю правую ветвь и иду туда*/
 
-
-
-            }
-            property.huffsize[k] = 0;
-            lastk = k;
-
-            
-        }
-
+        //[DllImport(@"dllhell.dll")]
+        //public static extern void InitForest(int N, int[] lll,int[] vvv);
+        //public static extern void InitForest(int N, IntPtr lll, IntPtr vvv);
+      
         /* Извлекает таблицу Хаффмана */
         private void RetrieveHuffmanTable(byte[] frag, ref int i)
         {
             Marker type2=Marker.Dummy;
             property.tableHuff = new List<byte>();
-            property.lll = new List<byte>();
-            property.vvv = new List<byte>();
+            property.lll = new List<int>();
+            property.vvv = new List<int>();
             byte b0;
             byte b1;
-            byte acc=0;
+            int acc=0;
             ushort j = 0;
             while (type2 == Marker.Dummy)
             {   
@@ -219,6 +200,7 @@ namespace vme
             b1 = (byte)(property.tableHuff[j] << 4);
             property.Th = (byte)(b1 >> 4);
             j++;
+            property.lll.Add(0);  // хак для таблицы HUFFSIZE
             for (byte k = 0; k < 16; k++)
             {
                 property.lll.Add(property.tableHuff[j]);
@@ -226,12 +208,30 @@ namespace vme
                     acc+=property.tableHuff[j];
                 j++;
             }
-            for (byte k = 0; k < acc; k++)
+            for (int k = 0; k < acc; k++)
             {
                 property.vvv.Add(property.tableHuff[j]);
                 j++;
             }
-            GenerateHuffSizeTable();
+
+            int[] l = new int[property.lll.Count];
+            l = property.lll.ToArray();
+            
+            int[] v = new int[property.vvv.Count];
+            v = property.vvv.ToArray();
+
+            IntPtr unmanagedPointer = Marshal.AllocHGlobal(l.Length);
+            Marshal.Copy(l, 0, unmanagedPointer, l.Length);
+
+            IntPtr unmanagedPointer2 = Marshal.AllocHGlobal(v.Length);
+            Marshal.Copy(v, 0, unmanagedPointer2, v.Length);
+       
+            //(acc, unmanagedPointer, unmanagedPointer2);
+            
+
+            
+            Marshal.FreeHGlobal(unmanagedPointer);
+            Marshal.FreeHGlobal(unmanagedPointer2);
 
 
         

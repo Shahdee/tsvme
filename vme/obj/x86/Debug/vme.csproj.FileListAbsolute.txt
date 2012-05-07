@@ -27,3 +27,13 @@ D:\tsvme\repo\vme\vme\obj\x86\Debug\GenerateResource.read.1.tlog
 D:\tsvme\repo\vme\vme\obj\x86\Debug\GenerateResource.write.1.tlog
 D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.exe
 D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.pdb
+D:\tsvme\repo\vme\obj\x86\Debug\vme.exe
+D:\tsvme\repo\vme\obj\x86\Debug\vme.pdb
+D:\tsvme\repo\vme\bin\Debug\vme.exe
+D:\tsvme\repo\vme\bin\Debug\vme.pdb
+D:\tsvme\repo\vme\obj\x86\Debug\ResolveAssemblyReference.cache
+D:\tsvme\repo\vme\obj\x86\Debug\vme.Canvas.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.Main.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.Properties.Resources.resources
+D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.read.1.tlog
+D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.write.1.tlog

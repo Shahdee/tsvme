@@ -25,8 +25,8 @@ namespace vme
         public ushort huffmanLength;
         public byte Tc; // класс таблицы  0=DC, 1=AC
         public byte Th; // идентификатор назначения таблицы
-        public List<byte> lll;
-        public List<byte> vvv;
+        public List<int> lll;
+        public List<int> vvv;
         public List<byte> huffsize;
 
         /*SOF - Описание кадра */
