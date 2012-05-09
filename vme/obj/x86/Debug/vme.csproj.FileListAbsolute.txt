@@ -37,3 +37,6 @@ D:\tsvme\repo\vme\obj\x86\Debug\vme.Main.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.Properties.Resources.resources
 D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.read.1.tlog
 D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.write.1.tlog
+D:\tsvme\repo\vme\bin\Debug\vme.exe.config
+D:\tsvme\repo\vme\obj\x86\Debug\ResGen.read.1.tlog
+D:\tsvme\repo\vme\obj\x86\Debug\ResGen.write.1.tlog

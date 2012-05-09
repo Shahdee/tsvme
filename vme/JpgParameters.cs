@@ -14,20 +14,23 @@ namespace vme
         {
             jdic = new JpegDictionary();
 
+            tree = new TBinarySTree();  // новое дерево Хаффмана
+
         }
 
 
         public ushort commentLength;
         public List<byte> comment;
-
+        public TBinarySTree tree;
         public List<byte> tableHuff;
+        public List<string> hcodes;
         /* ВРЕ - Описание таблицы Хаффмана*/      
         public ushort huffmanLength;
         public byte Tc; // класс таблицы  0=DC, 1=AC
         public byte Th; // идентификатор назначения таблицы
-        public List<int> lll;
-        public List<int> vvv;
-        public List<byte> huffsize;
+        public List<byte> lll;
+        public List<byte> vvv;
+        public List<byte> newlength;
 
         /*SOF - Описание кадра */
 
@@ -57,9 +60,17 @@ namespace vme
         public int scanLength;     // длина заголовка кадра
         public int Ns;             // число компонентов изображения в скане
         public int Ss;             // Используется для выбора предсказателя
-        public int Sc;             // Конец спектральной выборки
+        public int Se;             // Конец спектральной выборки , в lossless должен быть равен нулю
         public int Ah;             // Successive approximation bit position high 
         public int Al;             // Successive approximation bit position low or point transform 
+
+        public List<byte> esc;
+        public List<int> dc;
+        
+
+        /* DNL Segment */
+        public ushort dnlLength;
+        public ushort numLines;
 
         /* Component-spec. parameters - параметры компонентов спецификации */
         /*
