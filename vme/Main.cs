@@ -19,6 +19,8 @@ namespace vme
         DicomDecoder dec;
         List<byte> pixels8;
         List<ushort> pixels16;
+        List<short> pixels162;
+        
         
         public int imageWidth;
         public  int imageHeight;
@@ -34,6 +36,7 @@ namespace vme
             dec = new DicomDecoder();
             pixels8 = new List<byte>();
             pixels16 = new List<ushort>();
+            pixels162 = new List<short>();
             signedImage = false;
             
         }
@@ -76,8 +79,8 @@ namespace vme
             imageWidth = dec.width;
             imageHeight = dec.height;
             bpp = dec.bitsAllocated;
-            winCentre = dec.windowCentre;
-            winWidth = dec.windowWidth;
+            winCentre = dec.windowCentre; // средняя величина между самым ярким и самым тусклым пикселем
+            winWidth = dec.windowWidth; // разница между самым ярким и самым тусклым пикселем
             spp = dec.samplesPerPixel;
             signedImage = dec.signedImage;
             ImagePlane.NewImage = true;
@@ -103,22 +106,30 @@ namespace vme
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.GetPixels16(ref pixels16);
+                
 
-                if (winCentre == 0 && winWidth == 0)
+                // Учитываем Modality LUT
+                for (int i = 0; i < pixels16.Count; i++) 
                 {
-                    winWidth = 65536;
-                    winCentre = 32768;
+                   pixels162.Add((short)(pixels16[i] -1024));
                 }
+                    
+
+                    if (winCentre == 0 && winWidth == 0)
+                    {
+                        winWidth = 65536;
+                        winCentre = 32768;
+                    }
 
                 ImagePlane.Signed16Image = dec.signedImage;
-                ImagePlane.SetParameters(ref pixels16, imageWidth, imageHeight, winWidth, winCentre, true, this);
+                ImagePlane.SetParameters(ref pixels162, imageWidth, imageHeight, winWidth, winCentre, true, this);
             }
 
             /* если у нас 16bpp lossless CT изображение */
             if (spp == 1 && bpp == 16 && dec.compressedImage)
             {
                
-
+                //
 
 
             }

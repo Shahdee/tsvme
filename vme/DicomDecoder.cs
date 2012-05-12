@@ -580,7 +580,7 @@ namespace vme
 
         public void GetPixels16(ref List<ushort> pixels)
         {
-            pixels = pixels16;
+            pixels = pixels16; //&&
         }
 
 
@@ -709,7 +709,7 @@ namespace vme
                         signedImage = false;
                         unsignedS = unsignedS1;
                     }
-                    else  // Pixel representation is 1, indicating a 2s complement image
+                    else  // Pixel representation  = 1, indicating a 2s complement image
                     {
                         signedImage = true;
                         signedData[0] = b0;

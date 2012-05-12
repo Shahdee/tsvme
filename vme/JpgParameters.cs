@@ -16,6 +16,8 @@ namespace vme
 
             tree = new TBinarySTree();  // новое дерево Хаффмана
 
+            ptr = 0;  // указатель для массива сегмента ecs
+
         }
 
 
@@ -28,9 +30,19 @@ namespace vme
         public ushort huffmanLength;
         public byte Tc; // класс таблицы  0=DC, 1=AC
         public byte Th; // идентификатор назначения таблицы
-        public List<byte> lll;
-        public List<byte> vvv;
+        public List<byte> BITS;
+        public List<byte> HUFFVAL;
         public List<byte> newlength;
+
+        public int[] MinCode;
+        public int[] MaxCode;
+        public int[] ValPtr;
+        public List<byte> HUFFSIZE;
+        public List<int> HUFFCODE;
+        public List<int> EHUFFCO;
+        public List<byte> EHUFSI;
+        public int ptr;
+
 
         /*SOF - Описание кадра */
 
@@ -66,6 +78,9 @@ namespace vme
 
         public List<byte> esc;
         public List<int> dc;
+       
+        
+        public int lastK;
         
 
         /* DNL Segment */

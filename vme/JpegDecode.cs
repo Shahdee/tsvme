@@ -17,6 +17,8 @@ namespace vme
         HuffmanTables =6,
         Comment =7,
         DNLSegment =8,
+        Restart=9,
+        RestartInterval=10,
 
     };
 
@@ -57,9 +59,19 @@ namespace vme
                         return Marker.ScanHeader;
                     case "FFDC":
                         return Marker.DNLSegment;
-
+                    case "FFD0":
+                    case "FFD1":
+                    case "FFD2":
+                    case "FFD3":
+                    case "FFD4":
+                    case "FFD5":
+                    case "FFD6":
+                    case "FFD7":
+                        return Marker.Restart;
                     case "FFD9":
                         return Marker.ImageEnd;
+                    case "FFDD":
+                        return Marker.RestartInterval;
 
                     default: return Marker.Dummy;
                 }
@@ -224,7 +236,7 @@ namespace vme
                     // если мы достигли нужной глубины дерева (то есть длины кода, которая приходится на значение)
                     if (path == property.newlength[i])
                     {
-                        root.value = property.vvv[i];
+                        root.value = property.HUFFVAL[i];
                         root.code = code;
                         property.hcodes.Add(code);
                         ctr++;
@@ -245,24 +257,19 @@ namespace vme
                 }
             }
         }
-
-
-        //[DllImport(@"dllhell.dll", EntryPoint = "InitForest")]
-        //public static extern void InitForest(int N, [MarshalAs(UnmanagedType.LPArray, SizeConst = 17)] int[] lll, [MarshalAs(UnmanagedType.LPArray, SizeConst = 17)]  int[] vvv);
-        //public static extern void InitForest(int N, IntPtr lll, IntPtr vvv);
       
         /* перестраивает массив для дерева Хаффмана*/
         private void RebuildArray()
         {
             byte j=0;
             property.newlength = new List<byte>();
-            for (byte i = 0; i < property.lll.Count; i++ )
+            for (byte i = 0; i < property.BITS.Count; i++ )
             {
-                if (property.lll[i] != 0)
+                if (property.BITS[i] != 0)
                 {
-                    if (property.lll[i] > 1)
+                    if (property.BITS[i] > 1)
                     {
-                        for (byte k = 0; k < property.lll[i] ; k++) 
+                        for (byte k = 0; k < property.BITS[i] ; k++) 
                         {
                             property.newlength.Add(i);
                             j++;
@@ -278,14 +285,90 @@ namespace vme
             
         }
 
+        private void GenerateSizeTable()
+        {
+            property.HUFFSIZE = new List<byte>();
+            int k = 0;
+            byte length = 1;
+            int j = 1;
 
+            while (length < 16) 
+            {
+                if (j > property.BITS[length])
+                {
+                    length++;
+                    j = 1;
+                }
+                else 
+                {
+                    property.HUFFSIZE.Add(length);
+                    k++;
+                    j++;
+                }
+            
+            }
+            property.HUFFSIZE.Add(0); //!!!
+            property.lastK = k; //!!!
+
+        }
+
+        private void GenerationOfHuffmanCodes() 
+        {
+            int code=0;
+            int k = 0;
+            property.HUFFCODE = new List<int>();
+            byte esel = property.HUFFSIZE[0];
+            while (true) 
+            {
+                property.HUFFCODE.Add(code);
+                code++;
+                k++;
+                if (property.HUFFSIZE[k] != esel)
+                {
+                    if (property.HUFFSIZE[k] == 0)
+                    {
+                        return;
+                    }
+                    else 
+                    {
+                        while(property.HUFFSIZE[k]!=esel)
+                        {
+                            code = code << 1;
+                            esel++;
+                        }
+                    }
+                }
+            
+            }
+
+        
+        }
+
+        private void Ordering()
+        {
+            int k=0;
+            int length;
+            property.EHUFFCO = new List<int>();
+            property.EHUFSI = new List<byte>();
+            
+            while(k<property.lastK)
+            {
+                length = property.HUFFVAL[k];
+                property.EHUFFCO.Add(property.HUFFCODE[k]);
+                property.EHUFSI.Add(property.HUFFSIZE[k]);
+                k++;
+            }
+
+        }
+
+         
         /* Извлекает таблицу Хаффмана */
         private void RetrieveHuffmanTable(byte[] frag, ref int i)
         {
             Marker type2=Marker.Dummy;
             property.tableHuff = new List<byte>();
-            property.lll = new List<byte>();
-            property.vvv = new List<byte>();
+            property.BITS = new List<byte>();
+            property.HUFFVAL = new List<byte>();
             property.hcodes = new List<string>();
             byte b0;
             byte b1;
@@ -318,17 +401,17 @@ namespace vme
             b1 = (byte)(property.tableHuff[j] << 4);
             property.Th = (byte)(b1 >> 4);
             j++;
-            property.lll.Add(0);  // хак для таблицы HUFFSIZE
+            property.BITS.Add(0);  // хак для таблицы HUFFSIZE
             for (byte k = 0; k < 16; k++)
             {
-                property.lll.Add(property.tableHuff[j]);
+                property.BITS.Add(property.tableHuff[j]);
                 if(property.tableHuff[j]!=0)
                     acc+=property.tableHuff[j];
                 j++;
             }
             for (int k = 0; k < acc; k++)
             {
-                property.vvv.Add(property.tableHuff[j]);
+                property.HUFFVAL.Add(property.tableHuff[j]);
                 j++;
             }
 
@@ -337,19 +420,12 @@ namespace vme
             int ctr=0;
             string code = "";
             RebuildArray();
+
+            GenerateSizeTable();// HUFFSIZE
+            GenerationOfHuffmanCodes(); // HUFFCODES
             BuildHuffmanTree(ref property.tree.root, ref  ctr, acc, ref  path, ref  ii,code);
+            Ordering();
 
-            /*
-            IntPtr unmanagedPointer = Marshal.AllocHGlobal(l.Length);
-            Marshal.Copy(l, 0, unmanagedPointer, l.Length);
-
-            IntPtr unmanagedPointer2 = Marshal.AllocHGlobal(v.Length);
-            Marshal.Copy(v, 0, unmanagedPointer2, v.Length);
-
-        
-            Marshal.FreeHGlobal(unmanagedPointer);
-            Marshal.FreeHGlobal(unmanagedPointer2);
-            */
 
         }
 
@@ -406,50 +482,166 @@ namespace vme
         
         }
 
-        /* Декодирование файла с помощью дерева Хаффмана */
-        private void DecodeECS() 
+        private void CheckHuffCode(string acc, ref bool node,ref int val)
         {
-            property.dc = new List<int>();
-
-            TBinarySTree wood = new TBinarySTree();
-            wood = property.tree;
-            int val = 0;
-            string bin;
-            byte bit;
-            int rem = 0;
-            bool node = false;  // индикатор узла
-            int bptr; // битовый указатель
-
-            for (int k = 0; k < property.esc.Count; k++) 
+            for (int i = 0; i < property.hcodes.Count; i++) 
             {
-                bin = Convert.ToString(property.esc[k], 2);
-                for (int j = rem; j < bin.Length; j++)
+                if (acc == property.hcodes[i])
                 {
-                    if (bin[j] == '0')
-                        bit = 0;
-                    else
-                        bit = 1;
-                    GoGoTree(ref wood.root, bit, ref node, ref val);
-                    /* если мы дошли до корня, то восстанавливаем все значения */
-                    if (node == true)
-                    {
-                        property.dc.Add(val);
-                        rem = j;
-                        node = false;
-                        wood = property.tree;
-                        break;
+                    val = property.HUFFVAL[i];
+                    node = true;
 
-                    }
                 }
-                rem = 0;
             }
-            //property.esc
-
-           // property.tree.root;
-
         
         }
 
+      
+        
+        private void DecoderTableGeneration() 
+        {
+            property.MinCode = new int[17];
+            property.MinCode[0] = -1;
+            property.MaxCode = new int[17];
+            property.MaxCode[0] = -1;
+            property.ValPtr = new int[17];  // содержит индекс начала списка значений в HUFFVAL которые декодируются кодами длины length
+            
+
+            int length = 0;
+            int j = 0;
+            
+            while(true)
+            {
+                length++;
+                if(length>16)
+                    return;
+                else
+                {
+                    if(property.BITS[length]==0)
+                    {
+                        property.MaxCode[length] = -1;
+                        property.MinCode[length] = -1;
+
+                    }
+                    else// нет
+                    {
+                        property.ValPtr[length] = j; // содержит индекс начала списка значений в HUFFVAL которые декодируются кодами длины length
+                        property.MinCode[length] = property.HUFFCODE[j]; // записываем минимальный код для данной длины 
+                        j = j+ property.BITS[length] - 1; // диапазон в котором находятся коды для данной длины
+                        property.MaxCode[length] = property.HUFFCODE[j]; //записываем максимальный код для данной длины 
+                        j++;
+
+                    }
+                   
+                }
+            }
+
+        }
+
+        private void DecodeCycle() 
+        {
+            property.dc = new List<int>();
+            byte cnt = 0;
+            int T = 0;
+
+
+            while(property.ptr < property.esc.Count)
+            {
+                    
+                property.dc.Add(Decode(ref cnt));
+                
+            }
+        }
+        
+        /* The DECODE procedure decodes an 8-bit value  which,  for  the DC coefficient, determines the difference magnitude category   ISO 10918-1 */
+        /* Процедура DECODE декодирует 8 битовое значение которое, для DC коэффициентов определяет difference magnitude category ISO 10918-1*/
+        
+        private int Decode(ref byte cnt) 
+        {
+            int length = 1; // длина кода
+            byte val;
+            byte by1 = 0;
+            int code = NextBit(ref cnt, ref by1); //
+            int j;
+
+            while (code > property.MaxCode[length]) 
+            {
+                length++;
+                code = (code << 1) + NextBit(ref cnt, ref by1); //
+                
+            }
+
+            j = property.ValPtr[length];
+            j = j + code - property.MinCode[length];
+            val = property.HUFFVAL[j];
+
+            return val;
+        }
+         
+        
+       /*
+        private int ReceiveSSSS(int ssss)
+        {
+            int l = 0;
+            int v = 0;
+            while(l!= ssss) 
+            {
+                v = (v << 1) + NextBit(); //  учесть входной параметр
+                l++;
+            }
+            return v;
+        }
+        */
+
+        private byte NextByte() 
+        {
+            if (property.ptr < property.esc.Count) 
+            {
+                property.ptr++;
+                return property.esc[property.ptr-1];
+                
+            }
+            return 0; // 
+        
+        }
+
+        private int NextBit(ref byte cnt, ref byte by1) // учесть предыдущий байт!
+        {
+
+            int i = 0;
+            byte by2=0;
+            int bit=0;
+
+
+            if (cnt == 0)
+            {
+                by1 = NextByte();
+                cnt = 8;
+                if (by1 == 255) 
+                {
+                    by2 = NextByte();
+                    if (by2 != 0)
+                    {
+                        //Error
+                        // Process DNL marker
+                    }
+                    else//yes
+                    {
+                        
+                    }
+                }
+
+            }
+            //no
+            
+            bit = by1 >> 7;
+            cnt--;
+            by1 = (byte)(by1 << 1);
+
+            return bit;
+        }
+        
+        
         public void JpegDecoder(byte[] frag,int elementLength)
         {
 
@@ -509,7 +701,9 @@ namespace vme
                 
             }
             // Прочитали весь файл, теперь декодируем ECS
-            DecodeECS();
+            //DecodeECS();
+            DecoderTableGeneration();
+            DecodeCycle();
         
         }
 

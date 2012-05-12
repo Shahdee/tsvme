@@ -11,7 +11,8 @@ namespace vme
     
         List<byte> pix8;
         List<ushort> pix16;
-        List<byte> pix24; 
+        List<byte> pix24;
+        List<short> pix162;
         Bitmap bmp;
 
         int hOffset;
@@ -58,6 +59,7 @@ namespace vme
             
             pix8 = new List<byte>();
             pix16 = new List<ushort>();
+            pix162 = new List<short>();
     
             this.hScrollBar.Visible = false;
             this.vScrollBar.Visible = false;
@@ -93,7 +95,7 @@ namespace vme
         }
 
 
-        /*for bpp=8*/
+        /*для глубины  bpp=8*/
         public void SetParameters(ref List<byte> arr, int wid, int hei, double windowWidth,
             double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm)
         {
@@ -126,8 +128,8 @@ namespace vme
             Invalidate();
         }
 
-        /*for bpp 16*/
-        public void SetParameters(ref List<ushort> arr, int wid, int hei, double windowWidth,
+        /*для глубины 16bpp*/
+        public void SetParameters(ref List<short> arr, int wid, int hei, double windowWidth,   // arr ushort
             double windowCentre, bool resetScroll, Main mainFrm)
         {
             bpp = Imagebpp.Sixteenbpp;
@@ -161,7 +163,8 @@ namespace vme
                 changeValCentre = 25;
             }
 
-            pix16 = arr;
+            //pix16 = arr;
+            pix162 = arr;
             imagePixels16 = new byte[sizeImg3];
 
             mf = mainFrm;
@@ -169,11 +172,18 @@ namespace vme
             if (bmp != null)
                 bmp.Dispose();
             ResetValues();
-            ComputeLookUpTable16();
+            //ComputeLookUpTable16();
+            ComputeIntersectLUT16();
             bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             CreateImage16();
             if (resetScroll == true) ComputeScrollBarParameters();
             Invalidate();
+        }
+
+        private ushort RescaleInterval(short color) 
+        {
+            return (ushort)(color + 32768);
+        
         }
 
         private void CreateImage16()
@@ -194,11 +204,18 @@ namespace vme
 
                     for (j = 0; j < bmd.Width; ++j)
                     {
+                        b = lut16[ RescaleInterval(pix162[i * bmd.Width + j]) ];
+                        j1 = j * pixelSize;
+                        row[j1] = b;           
+                        row[j1 + 1] = b;
+                        row[j1 + 2] = b;  
+                        /*
                         b = lut16[pix16[i * bmd.Width + j]];
                         j1 = j * pixelSize;
-                        row[j1] = b;            // RGB respectively
+                        row[j1] = b;            // RGB соответственно
                         row[j1 + 1] = b;       
-                        row[j1 + 2] = b;        
+                        row[j1 + 2] = b;  
+                         * */
                     }
                 }
             }
@@ -209,6 +226,7 @@ namespace vme
         {
             int range = winMax - winMin;
             if (range < 1) range = 1;
+            
             double factor = 255.0 / range;
             int i;
 
@@ -221,6 +239,30 @@ namespace vme
                 else
                 {
                     lut16[i] = (byte)((i - winMin) * factor);
+                }
+            }
+        }
+
+        private void ComputeIntersectLUT16() 
+        {
+            int range = (winMax-winMin);
+            if (range < 1) range = 1;
+            double z;
+            double factor = 255.0 / range;
+            int i;
+
+            for (i = 0; i < 65536; ++i)
+            {
+                if (i <= (winMin+32768))
+                    lut16[i] = 0;
+                else if (i >= (winMax + 32768))
+                    lut16[i] = 255;
+                else
+                {
+                    
+                   //lut16[i] = (byte) (((i - (winCentre+32768 - 0.5)) / (winWidth+32768 + 0.5)) * (255 - 0) + 0);
+                   lut16[i] = (byte)((i - (winMin+32768)) * factor); // -32768
+                     
                 }
             }
         }
@@ -262,7 +304,8 @@ namespace vme
 
                 for (i = 0; i < bmd.Height; ++i)
                 {
-                    // this is a pointer to each string on a new line of image when scaning
+                    
+                    // это указатель на строку изображения 
                     byte* row = (byte*)bmd.Scan0 + (i * bmd.Stride);
                     i1 = i * bmd.Width;
 
@@ -345,7 +388,7 @@ namespace vme
             }
             else if (bpp == Imagebpp.Sixteenbpp)
             {
-                if (pix16.Count > 0)
+                if (pix162.Count > 0)
                 {
                     Graphics g = Graphics.FromHwnd(surface.Handle);
                     if (newImage == true)
