@@ -12,7 +12,10 @@ namespace vme
         List<byte> pix8;
         List<ushort> pix16;
         List<byte> pix24;
-        List<short> pix162;
+        List<short> pix16_signed;
+        ushort[] histogram;
+        ushort[] histogram_HU;
+        double this_intercept;
         Bitmap bmp;
 
         int hOffset;
@@ -27,8 +30,10 @@ namespace vme
 
         int winMin;
         int winMax;
+
         int winCentre;
         int winWidth;
+
         int winShr1;
         int deltaX;
         int deltaY;
@@ -59,7 +64,7 @@ namespace vme
             
             pix8 = new List<byte>();
             pix16 = new List<ushort>();
-            pix162 = new List<short>();
+            pix16_signed = new List<short>();
     
             this.hScrollBar.Visible = false;
             this.vScrollBar.Visible = false;
@@ -94,16 +99,21 @@ namespace vme
             set { signed16Image = value; }
         }
 
-
         /*для глубины  bpp=8*/
         public void SetParameters(ref List<byte> arr, int wid, int hei, double windowWidth,
-            double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm)
+            double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm, ushort[] hi, ushort[] hi_hu)
         {
             if (samplesPerPixel == 1)
             {
                 bpp = Imagebpp.Eightbpp;
                 imgWidth = wid;
                 imgHeight = hei;
+
+                histogram = new ushort[256];
+                histogram_HU = new ushort[imgWidth*imgHeight];
+                histogram = hi;
+                histogram_HU = hi_hu;
+
                 winWidth = Convert.ToInt32(windowWidth);
                 winCentre = Convert.ToInt32(windowCentre);
                 changeValWidth = 0.1;
@@ -128,25 +138,25 @@ namespace vme
             Invalidate();
         }
 
-        /*для глубины 16bpp*/
-        public void SetParameters(ref List<short> arr, int wid, int hei, double windowWidth,   // arr ushort
-            double windowCentre, bool resetScroll, Main mainFrm)
+        /*для глубины 16bpp и rescale intercept!=0*/
+        public void SetParametersIntercept(ref List<short> arr, double intercept, int wid, int hei, double windowWidth,   // arr ushort
+            double windowCentre, bool resetScroll, Main mainFrm, ushort[] hi, ushort[] hi_hu)
         {
             bpp = Imagebpp.Sixteenbpp;
             imgWidth = wid;
             imgHeight = hei;
+            histogram = new ushort[256];
+            histogram_HU = new ushort[imgWidth * imgHeight];
+            histogram = hi;
+            histogram_HU = hi_hu;
             winWidth = Convert.ToInt32(windowWidth);
             winCentre = Convert.ToInt32(windowCentre);
-
+            this_intercept = intercept;
             sizeImg = imgWidth * imgHeight;
             sizeImg3 = sizeImg * 3;
             double sizeImg3By4 = sizeImg3 / 4.0;
-
-
             if (signed16Image == true)
                 winCentre -= short.MinValue;
-
-            
             if (winWidth < 5000)
             {
                 changeValWidth = 2;
@@ -162,18 +172,67 @@ namespace vme
                 changeValWidth = 25;
                 changeValCentre = 25;
             }
-
-            //pix16 = arr;
-            pix162 = arr;
+            pix16_signed = arr;
             imagePixels16 = new byte[sizeImg3];
-
             mf = mainFrm;
+
             imageAvailable = true;
             if (bmp != null)
                 bmp.Dispose();
             ResetValues();
-            //ComputeLookUpTable16();
+            
             ComputeIntersectLUT16();
+            bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            CreateImage16();
+            if (resetScroll == true) ComputeScrollBarParameters();
+            Invalidate();
+        }
+
+        /*для глубины 16bpp и rescale intercept=0*/
+        public void SetParameters(ref List<ushort> arr,double intercept, int wid, int hei, double windowWidth,   // arr ushort
+            double windowCentre, bool resetScroll, Main mainFrm, ushort[] hi, ushort[] hi_hu)
+        {
+            bpp = Imagebpp.Sixteenbpp;
+            imgWidth = wid;
+            imgHeight = hei;
+            histogram = new ushort[256];
+            histogram_HU = new ushort[imgWidth * imgHeight];
+            histogram = hi;
+            histogram_HU = hi_hu;
+            winWidth = Convert.ToInt32(windowWidth);
+            winCentre = Convert.ToInt32(windowCentre);
+            this_intercept = intercept;
+            sizeImg = imgWidth * imgHeight;
+            sizeImg3 = sizeImg * 3;
+            double sizeImg3By4 = sizeImg3 / 4.0;
+            if (signed16Image == true)
+                winCentre -= short.MinValue;
+            
+            if (winWidth < 5000)
+            {
+                changeValWidth = 2;
+                changeValCentre = 2;
+            }
+            else if (Width > 40000)
+            {
+                changeValWidth = 50;
+                changeValCentre = 50;
+            }
+            else
+            {
+                changeValWidth = 25;
+                changeValCentre = 25;
+            }
+            pix16 = arr;
+            imagePixels16 = new byte[sizeImg3];
+            mf = mainFrm;
+            
+            imageAvailable = true;
+            if (bmp != null)
+                bmp.Dispose();
+            ResetValues();
+
+            ComputeLookUpTable16();
             bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             CreateImage16();
             if (resetScroll == true) ComputeScrollBarParameters();
@@ -183,14 +242,13 @@ namespace vme
         private ushort RescaleInterval(short color) 
         {
             return (ushort)(color + 32768);
-        
         }
 
         private void CreateImage16()
         {
             BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, imgWidth, imgHeight),
                System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
-
+            
             unsafe
             {
                 int pixelSize = 3;
@@ -204,24 +262,26 @@ namespace vme
 
                     for (j = 0; j < bmd.Width; ++j)
                     {
-                        b = lut16[ RescaleInterval(pix162[i * bmd.Width + j]) ];
+                        if (this_intercept != 0)
+                        {
+                            b = lut16[RescaleInterval(pix16_signed[i * bmd.Width + j])];
+                        }
+                        else
+                        {
+                            b = lut16[pix16[i * bmd.Width + j]];
+                        }
+                        histogram[b]++; // гистограмма для среза [0..255]
                         j1 = j * pixelSize;
                         row[j1] = b;           
                         row[j1 + 1] = b;
                         row[j1 + 2] = b;  
-                        /*
-                        b = lut16[pix16[i * bmd.Width + j]];
-                        j1 = j * pixelSize;
-                        row[j1] = b;            // RGB соответственно
-                        row[j1 + 1] = b;       
-                        row[j1 + 2] = b;  
-                         * */
                     }
                 }
             }
             bmp.UnlockBits(bmd);
         }
 
+        // для unsigned
         private void ComputeLookUpTable16()
         {
             int range = winMax - winMin;
@@ -243,25 +303,24 @@ namespace vme
             }
         }
 
+        // для signed
         private void ComputeIntersectLUT16() 
         {
             int range = (winMax-winMin);
             if (range < 1) range = 1;
-            double z;
             double factor = 255.0 / range;
             int i;
 
             for (i = 0; i < 65536; ++i)
             {
-                if (i <= (winMin+32768))
+                if (i <= (winMin)) // +32768
                     lut16[i] = 0;
-                else if (i >= (winMax + 32768))
+                else if (i >= (winMax)) // +32768
                     lut16[i] = 255;
                 else
                 {
-                    
-                   //lut16[i] = (byte) (((i - (winCentre+32768 - 0.5)) / (winWidth+32768 + 0.5)) * (255 - 0) + 0);
-                   lut16[i] = (byte)((i - (winMin+32768)) * factor); // -32768
+                   //lut16[i] = (byte)(((i - (winCentre - 0.5)) / (winWidth + 0.5)) * (255 - 0) + 0); // +32768  +32768
+                   lut16[i] = (byte)((i - (winMin)) * factor); // -32768
                      
                 }
             }
@@ -289,8 +348,6 @@ namespace vme
             }
         }
 
-
-        
         private void CreateImage8()
         {
             BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, imgWidth, imgHeight),
@@ -337,8 +394,7 @@ namespace vme
             else
             {
                 hScrollBar.Visible = true;
-                hScrollBar.Value = (hScrollBar.Maximum + 1 -
-                    hScrollBar.LargeChange - hScrollBar.Minimum) / 2;
+                hScrollBar.Value = (hScrollBar.Maximum + 1 - hScrollBar.LargeChange - hScrollBar.Minimum) / 2;
             }
 
             if (imgHeight < panHeight)
@@ -348,28 +404,25 @@ namespace vme
             else
             {
                 vScrollBar.Visible = true;
-                vScrollBar.Value = (vScrollBar.Maximum + 1 -
-                    vScrollBar.LargeChange - vScrollBar.Minimum) / 2;
+                vScrollBar.Value = (vScrollBar.Maximum + 1 - vScrollBar.LargeChange - vScrollBar.Minimum) / 2;
             }
         }
 
         private void vScrollBar_Scroll(object sender, ScrollEventArgs e)
         {
             int val = vScrollBar.Value;
-            vOffset = (panHeight - imgHeight) * (val - vScrollBar.Minimum) /
-                    (vMax - vScrollBar.Minimum);
+            vOffset = (panHeight - imgHeight) * (val - vScrollBar.Minimum) / (vMax - vScrollBar.Minimum);
             Invalidate();
         }
 
         private void hScrollBar_Scroll(object sender, ScrollEventArgs e)
         {
             int val = hScrollBar.Value;
-            hOffset = (panWidth - imgWidth) * (val - hScrollBar.Minimum) /
-                (hMax - hScrollBar.Minimum);
+            hOffset = (panWidth - imgWidth) * (val - hScrollBar.Minimum) / (hMax - hScrollBar.Minimum);
             Invalidate();
         }
 
-        private void ImagePanel_Paint(object sender, PaintEventArgs e)
+        private void Canvas_Paint(object sender, PaintEventArgs e)
         {
             if (bpp == Imagebpp.Eightbpp)
             {
@@ -388,7 +441,7 @@ namespace vme
             }
             else if (bpp == Imagebpp.Sixteenbpp)
             {
-                if (pix162.Count > 0)
+                if (pix16_signed.Count > 0 || pix16.Count>0)
                 {
                     Graphics g = Graphics.FromHwnd(surface.Handle);
                     if (newImage == true)
@@ -402,16 +455,124 @@ namespace vme
                 }
             }
 
+
+            // пересчет параметров только для signed изображения
+
+            int winCentreToDisplay = winCentre;
+            int winMinToDisplay = winMin;
+            int winMaxToDisplay = winMax;
+
+            /*
+            if (signed16Image == true)
+            {
+                winCentreToDisplay += short.MinValue;
+                winMinToDisplay += short.MinValue;
+                winMaxToDisplay += short.MinValue;
+            }
+
+
+            mf.text_width.Text = "width: " + Convert.ToString(winWidth);
+            mf.text_centre.Text = "centre: " + Convert.ToString(winCentreToDisplay);
+            mf.text_min.Text = "min: " + Convert.ToString(winMinToDisplay);
+            mf.text_width.Text = "max: " + Convert.ToString(winMaxToDisplay);
+            */
+
+        }
+
+        private void UpdateMainForm()
+        {
+            mf.UpdateWindowLevel(winWidth, winCentre, bpp);
+
         }
 
         public void ResetValues()
         {
+
+            //n добавить с учетом знаковых пикселей
+            if(this_intercept!=0)
+            {
+                //....
+            }
+
             winMax = Convert.ToInt32(winCentre + 0.5 * winWidth);
             winMin = winMax - winWidth;
+           
+            UpdateMainForm();
         }
-         
 
-        private void ImagePanelControl_Resize(object sender, EventArgs e)
+       
+        private void Surface_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (imageAvailable == true)
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    ptWLDown.X = e.X;
+                    ptWLDown.Y = e.Y;
+                    rightMouseDown = true;
+                    Cursor = Cursors.Hand;
+                }
+            }
+        }
+
+        private void Surface_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (rightMouseDown == true)
+            {
+                rightMouseDown = false;
+                Cursor = Cursors.Default;
+            }
+        }
+
+        private void Surface_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (rightMouseDown == true)
+            {
+                winShr1 = winWidth >> 1;
+                winWidth = winMax - winMin;
+                winCentre = winMin + winShr1;
+
+                deltaX = Convert.ToInt32((ptWLDown.X - e.X) * changeValWidth);
+                deltaY = Convert.ToInt32((ptWLDown.Y - e.Y) * changeValCentre);
+
+                winCentre -= deltaY;
+                winWidth -= deltaX;
+
+                if (winWidth < 2) winWidth = 2;
+
+                winMin = winCentre - winShr1;
+                winMax = winCentre + winShr1;
+
+                if (winMin >= winMax) winMin = winMax - 1;
+                if (winMax <= winMin) winMax = winMin + 1;
+
+                ptWLDown.X = e.X;
+                ptWLDown.Y = e.Y;
+
+               
+
+                UpdateMainForm();
+
+                //
+
+                if (bpp == Imagebpp.Eightbpp)
+                {
+                    ComputeLookUpTable8();
+                    CreateImage8();
+                }
+                else if (bpp == Imagebpp.Sixteenbpp)
+                {
+                    if (this_intercept == 0)
+                        ComputeLookUpTable16(); //
+                    else
+                        ComputeIntersectLUT16(); //
+                    CreateImage16(); //  здесь  расчитывается также гистограмма изображения
+                }
+                Invalidate();
+            }
+        }
+
+        private void Canvas_Resize(object sender, EventArgs e)
         {
             PerformResize();
         }
@@ -431,6 +592,7 @@ namespace vme
             hMax = hScrollBar.Maximum - hScrollBar.LargeChange + hScrollBar.SmallChange;
             vMax = vScrollBar.Maximum - vScrollBar.LargeChange + vScrollBar.SmallChange;
         }
+         
 
     }
 }

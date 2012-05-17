@@ -61,7 +61,7 @@ namespace vme
         bool oddLocations = false;
         bool inSequence;
 
-        double rescaleIntercept, rescaleSlope;
+        public double rescaleIntercept, rescaleSlope;
         ushort planarConfiguration;
 
         bool littleEndian = true; // by default
@@ -430,11 +430,11 @@ namespace vme
             location += 128;
             if (DICM == GetString(4))
             {
-                MessageBox.Show("Great, it is a Dicom file!");
+               // MessageBox.Show("Это DICOM файл!");
             }
             else
             {
-                MessageBox.Show("Sorry, this is not a DICOM file");
+                MessageBox.Show("Не могу обработать этот файл");
                 return false;
             }
 
@@ -455,7 +455,7 @@ namespace vme
                 if (elementLength == -1 && tag != PIXEL_DATA) // ask yourself about UT and its length
                 {
                     elementLength = 0;
-                    inSequence = true; // It must be a sequence of items
+                    inSequence = true; // Это должно быть последовательность элементов
                 }
 
                 if ((location & 1) != 0)
@@ -474,12 +474,10 @@ namespace vme
                         s = GetString(elementLength);
                         AddInfo(tag, s); //
 
-                        //1.2.5 = JPEG 12 lossless - CT images from Philips
+                        //1.2.5 = JPEG 12 lossless - CT  
                         if (s.IndexOf("1.2.4") > -1 || s.IndexOf("1.2.5") > -1)
                         {
                             compressedImage = true;
-                            //file.Close();
-                            //return false;
                         }
 
                         if (s.IndexOf("1.2.840.10008.1.2.2") >= 0)
@@ -511,6 +509,17 @@ namespace vme
                     case SAMPLES_PER_PIXEL:
                         samplesPerPixel = ReadShort();
                         AddInfo(tag, Convert.ToString(samplesPerPixel));
+                        break;
+
+                    case (int)(RESCALE_INTERCEPT):
+                        String intercept = GetString(elementLength);
+                        rescaleIntercept = Convert.ToDouble(intercept, new CultureInfo("en-US"));
+                        AddInfo(tag, intercept);
+                        break;
+                    case (int)(RESCALE_SLOPE):
+                        String slop = GetString(elementLength);
+                        rescaleSlope = Convert.ToDouble(slop, new CultureInfo("en-US"));
+                        AddInfo(tag, slop);
                         break;
 
                     case WINDOW_CENTER: //~&
@@ -556,7 +565,7 @@ namespace vme
                             
                         break;
 
-                    /*The value of Photometric Interpretation (0028,0004) specifies the intended interpretation of the image pixel data. */
+                    /*Photometric Interpretation (0028,0004) указывает число сэмплов на пиксель */
                     case PHOTOMETRIC_INTERPRETATION:
                         photoInterpretation = GetString(elementLength);
                         AddInfo(tag, photoInterpretation);

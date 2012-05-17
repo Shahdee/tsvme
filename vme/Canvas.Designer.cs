@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.vScrollBar = new System.Windows.Forms.VScrollBar();
-            this.surface = new System.Windows.Forms.Panel();
             this.hScrollBar = new System.Windows.Forms.HScrollBar();
+            this.surface = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // vScrollBar
@@ -41,13 +41,6 @@
             this.vScrollBar.TabIndex = 3;
             this.vScrollBar.Scroll += new System.Windows.Forms.ScrollEventHandler(this.vScrollBar_Scroll);
             // 
-            // surface
-            // 
-            this.surface.Location = new System.Drawing.Point(3, 3);
-            this.surface.Name = "surface";
-            this.surface.Size = new System.Drawing.Size(776, 576);
-            this.surface.TabIndex = 5;
-            // 
             // hScrollBar
             // 
             this.hScrollBar.Location = new System.Drawing.Point(4, 582);
@@ -55,6 +48,17 @@
             this.hScrollBar.Size = new System.Drawing.Size(775, 17);
             this.hScrollBar.TabIndex = 4;
             this.hScrollBar.Scroll += new System.Windows.Forms.ScrollEventHandler(this.hScrollBar_Scroll);
+            // 
+            // surface
+            // 
+            this.surface.Location = new System.Drawing.Point(3, 3);
+            this.surface.Name = "surface";
+            this.surface.Size = new System.Drawing.Size(776, 576);
+            this.surface.TabIndex = 5;
+
+            this.surface.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseDown);
+            this.surface.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseMove);
+            this.surface.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseUp);
             // 
             // Canvas
             // 
@@ -64,9 +68,9 @@
             this.Controls.Add(this.surface);
             this.Controls.Add(this.vScrollBar);
             this.Name = "Canvas";
-            this.Size = new System.Drawing.Size(802, 603);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ImagePanel_Paint);
-            this.Resize += new System.EventHandler(this.ImagePanelControl_Resize);
+            this.Size = new System.Drawing.Size(800, 600);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Canvas_Paint);
+            this.Resize += new System.EventHandler(this.Canvas_Resize);
             this.ResumeLayout(false);
 
         }
@@ -74,8 +78,8 @@
         #endregion
 
         private System.Windows.Forms.VScrollBar vScrollBar;
-        private System.Windows.Forms.Panel surface;
         private System.Windows.Forms.HScrollBar hScrollBar;
+        private System.Windows.Forms.Panel surface;
 
     }
 }

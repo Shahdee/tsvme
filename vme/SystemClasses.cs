@@ -5,6 +5,7 @@ using System.Text;
 
 namespace vme
 {
+    public enum Imagebpp { Eightbpp, Sixteenbpp };
 
     /* Бинарное дерево */
     public class TreeNode

@@ -11,7 +11,8 @@
     <RootNamespace>vme</RootNamespace>
     <AssemblyName>vme</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -55,6 +56,12 @@
     </Compile>
     <Compile Include="DicomDecoder.cs" />
     <Compile Include="DicomDictionary.cs" />
+    <Compile Include="Histogram.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Histogram.Designer.cs">
+      <DependentUpon>Histogram.cs</DependentUpon>
+    </Compile>
     <Compile Include="JpegDecode.cs" />
     <Compile Include="JpegDictionary.cs" />
     <Compile Include="JpgParameters.cs" />
@@ -68,9 +75,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemClasses.cs" />
     <Compile Include="SystemFunctions.cs" />
-    <Compile Include="WindowLevelGraphControl.cs" />
+    <Compile Include="TransferFunction.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TransferFunction.Designer.cs">
+      <DependentUpon>TransferFunction.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Canvas.resx">
       <DependentUpon>Canvas.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Histogram.resx">
+      <DependentUpon>Histogram.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
@@ -85,8 +101,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="TransferFunction.resx">
+      <DependentUpon>TransferFunction.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="ClassDiagram2.cd" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
