@@ -54,6 +54,12 @@
     <Compile Include="Canvas.Designer.cs">
       <DependentUpon>Canvas.cs</DependentUpon>
     </Compile>
+    <Compile Include="ColoredTF.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ColoredTF.Designer.cs">
+      <DependentUpon>ColoredTF.cs</DependentUpon>
+    </Compile>
     <Compile Include="DicomDecoder.cs" />
     <Compile Include="DicomDictionary.cs" />
     <Compile Include="Histogram.cs">
@@ -84,6 +90,9 @@
     <EmbeddedResource Include="Canvas.resx">
       <DependentUpon>Canvas.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ColoredTF.resx">
+      <DependentUpon>ColoredTF.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Histogram.resx">
       <DependentUpon>Histogram.cs</DependentUpon>

@@ -197,5 +197,22 @@ namespace vme
             
         }
 
+        private void Color_Click(object sender, EventArgs e)
+        {
+            ColorDialog MyDialog = new ColorDialog();
+            // Keeps the user from selecting a custom color.
+            MyDialog.AllowFullOpen = false;
+            // Allows the user to get help. (The default is false.)
+            MyDialog.ShowHelp = true;
+            // Sets the initial color select to the current text color.
+            MyDialog.Color = Histogram.ForeColor;
+
+            // Update the text box color if the user clicks OK 
+            if (MyDialog.ShowDialog() == DialogResult.OK)
+                Histogram.ForeColor = MyDialog.Color;
+
+            Histogram.pp.c = MyDialog.Color; // run-time error
+        }
+
     }
 }

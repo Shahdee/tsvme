@@ -36,10 +36,11 @@
             this.text_centre = new System.Windows.Forms.Label();
             this.text_max = new System.Windows.Forms.Label();
             this.ColorDialog = new System.Windows.Forms.ColorDialog();
+            this.AssignCA = new System.Windows.Forms.Button();
             this.TransferFunction = new vme.TransferFunction();
             this.Histogram = new vme.Histogram();
             this.ImagePlane = new vme.Canvas();
-            this.AssignCA = new System.Windows.Forms.Button();
+            this.Color = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Open
@@ -64,7 +65,7 @@
             // 
             // reset_fn
             // 
-            this.reset_fn.Location = new System.Drawing.Point(520, 224);
+            this.reset_fn.Location = new System.Drawing.Point(446, 222);
             this.reset_fn.Name = "reset_fn";
             this.reset_fn.Size = new System.Drawing.Size(118, 35);
             this.reset_fn.TabIndex = 7;
@@ -108,6 +109,16 @@
             this.text_max.TabIndex = 11;
             this.text_max.Text = "winMax";
             // 
+            // AssignCA
+            // 
+            this.AssignCA.Location = new System.Drawing.Point(1073, 21);
+            this.AssignCA.Name = "AssignCA";
+            this.AssignCA.Size = new System.Drawing.Size(118, 35);
+            this.AssignCA.TabIndex = 13;
+            this.AssignCA.Text = "Присвоить ц/п";
+            this.AssignCA.UseVisualStyleBackColor = true;
+            this.AssignCA.Click += new System.EventHandler(this.AssignCA_Click);
+            // 
             // TransferFunction
             // 
             this.TransferFunction.BackColor = System.Drawing.SystemColors.Control;
@@ -134,15 +145,15 @@
             this.ImagePlane.Size = new System.Drawing.Size(512, 512);
             this.ImagePlane.TabIndex = 1;
             // 
-            // AssignCA
+            // Color
             // 
-            this.AssignCA.Location = new System.Drawing.Point(1073, 21);
-            this.AssignCA.Name = "AssignCA";
-            this.AssignCA.Size = new System.Drawing.Size(118, 35);
-            this.AssignCA.TabIndex = 13;
-            this.AssignCA.Text = "Присвоить ц/п";
-            this.AssignCA.UseVisualStyleBackColor = true;
-            this.AssignCA.Click += new System.EventHandler(this.AssignCA_Click);
+            this.Color.Location = new System.Drawing.Point(570, 222);
+            this.Color.Name = "Color";
+            this.Color.Size = new System.Drawing.Size(68, 35);
+            this.Color.TabIndex = 14;
+            this.Color.Text = "Цвет";
+            this.Color.UseVisualStyleBackColor = true;
+            this.Color.Click += new System.EventHandler(this.Color_Click);
             // 
             // Main
             // 
@@ -150,6 +161,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
+            this.Controls.Add(this.Color);
             this.Controls.Add(this.AssignCA);
             this.Controls.Add(this.TransferFunction);
             this.Controls.Add(this.text_max);
@@ -182,6 +194,7 @@
         private TransferFunction TransferFunction;
         private System.Windows.Forms.ColorDialog ColorDialog;
         private System.Windows.Forms.Button AssignCA;
+        private System.Windows.Forms.Button Color;
         
     }
 }
