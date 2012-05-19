@@ -11,22 +11,22 @@ using System.Drawing.Imaging;
 
 namespace vme
 {
-    
+
 
     public partial class Main : Form
     {
         public bool readable = false;
-        
+
         DicomDecoder dec;
         List<byte> pixels8;
         List<ushort> pixels16;
         List<short> pixels16_signed; //
         ushort[] histogram_main;
         ushort[] histogram_HU_main;
-        
-        
+
+
         public int imageWidth;
-        public  int imageHeight;
+        public int imageHeight;
         public double winWidth;
         public double winCentre;
         public ushort bpp;
@@ -54,20 +54,20 @@ namespace vme
 
             if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0))
             {
-                    Cursor = Cursors.WaitCursor;
-                    ReadAndDisplayDicomFile(ofd.FileName, ofd.SafeFileName);
-                    Cursor = Cursors.Default;
+                Cursor = Cursors.WaitCursor;
+                ReadAndDisplayDicomFile(ofd.FileName, ofd.SafeFileName);
+                Cursor = Cursors.Default;
             }
-                ofd.Dispose();
+            ofd.Dispose();
         }
 
-        private void ReadAndDisplayDicomFile(string filename, string name) 
+        private void ReadAndDisplayDicomFile(string filename, string name)
         {
             if (readable = dec.ReadFile(filename))
                 DisplayData();
             else
                 MessageBox.Show("Невозможно обработать файл");
-            return ;
+            return;
         }
 
         private void DisplayData()
@@ -84,9 +84,9 @@ namespace vme
                 ImagePlane.Signed16Image = true;
             }
             ImagePlane.Signed16Image = dec.signedImage; // знаковое изображение или нет
-            ImagePlane.NewImage = true; 
-            histogram_main = new ushort[imageWidth*imageHeight];
-            histogram_HU_main = new ushort[imageWidth*imageHeight];
+            ImagePlane.NewImage = true;
+            histogram_main = new ushort[imageWidth * imageHeight];
+            histogram_HU_main = new ushort[imageWidth * imageHeight];
             if (spp == 1 && bpp == 8)
             {
                 pixels8.Clear();
@@ -104,14 +104,14 @@ namespace vme
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.GetPixels16(ref pixels16);
-                intercept = (short) dec.rescaleIntercept;
-                slope = (short) dec.rescaleSlope;
+                intercept = (short)dec.rescaleIntercept;
+                slope = (short)dec.rescaleSlope;
 
                 // Учитываем Modality LUT
                 if (dec.rescaleIntercept < 0)
                 {
                     for (int i = 0; i < pixels16.Count; i++)
-                        pixels16_signed.Add((short)(pixels16[i] * slope+intercept));
+                        pixels16_signed.Add((short)(pixels16[i] * slope + intercept));
                 }
                 if (winCentre == 0 && winWidth == 0)
                 {
@@ -120,12 +120,12 @@ namespace vme
                 }
 
                 if (dec.rescaleIntercept < 0)
-                {   
+                {
                     ImagePlane.SetParametersIntercept(ref pixels16_signed, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, histogram_main, histogram_HU_main);
                 }
                 else
                     ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, histogram_main, histogram_HU_main);
-                Histogram.PassAlong(this); // передача MainForm в Control Гистограмма
+                ColorTFobj.PassAlong(this); // передача MainForm в Control Гистограмма
             }
             /* если у нас 16bpp lossless CT изображение */
             if (spp == 1 && bpp == 16 && dec.compressedImage)
@@ -140,10 +140,10 @@ namespace vme
             int winMax = winMin + winWidth;
 
             this.TransferFunction.SetWindowWidthCentre(winMin, winMax, winWidth, winCentre, bpp, signedImage);
-            this.Histogram.SetParametersHistogram(winMin, winMax, winWidth, winCentre, bpp, signedImage);
+            this.ColorTFobj.SetParametersHistogram(winMin, winMax, winWidth, winCentre, bpp, signedImage);
         }
 
-        public void UpdateFormHitosgram() 
+        public void UpdateFormHitosgram()
         {
             this.TransferFunction.Invalidate();
             this.ImagePlane.Invalidate();
@@ -164,14 +164,14 @@ namespace vme
                 if (bpp == 8)
                 {
                     if (spp == 1)
-                            ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram_main, histogram_HU_main);
+                        ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram_main, histogram_HU_main);
                 }
 
                 if (bpp == 16)
                 {
                     if (intercept == 0)
                         ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, histogram_main, histogram_HU_main);
-                    else 
+                    else
                     {
                         ImagePlane.SetParametersIntercept(ref pixels16_signed, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, histogram_main, histogram_HU_main);
                     }
@@ -181,38 +181,7 @@ namespace vme
                 MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров!");
         }
 
-        private void reset_fn_Click(object sender, EventArgs e)
-        {
-            if ((pixels8.Count > 0) || (pixels16.Count > 0) || (pixels16_signed.Count > 0))
-            {
-                Histogram.ResetValues();
-            }
-            else
-                MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров 2 !");
-        }
 
-        /* Присваивает цвета и степень прозрачности пикселям изображения в зависимости от передаточной функции*/
-        private void AssignCA_Click(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void Color_Click(object sender, EventArgs e)
-        {
-            ColorDialog MyDialog = new ColorDialog();
-            // Keeps the user from selecting a custom color.
-            MyDialog.AllowFullOpen = false;
-            // Allows the user to get help. (The default is false.)
-            MyDialog.ShowHelp = true;
-            // Sets the initial color select to the current text color.
-            MyDialog.Color = Histogram.ForeColor;
-
-            // Update the text box color if the user clicks OK 
-            if (MyDialog.ShowDialog() == DialogResult.OK)
-                Histogram.ForeColor = MyDialog.Color;
-
-            Histogram.pp.c = MyDialog.Color; // run-time error
-        }
 
     }
 }

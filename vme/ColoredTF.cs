@@ -39,8 +39,8 @@ namespace vme
             InitializeComponent();
             DoubleBuffered = true;
             marginLeft = 25;
-            marginRight = 25;
-            marginTop = 20;
+            marginRight = 50;
+            marginTop = 50;
             marginBottom = 20;
             pp.p.X = 0;
             pp.p.Y = 0;
@@ -259,7 +259,7 @@ namespace vme
 
         private void reset_fn_Click(object sender, EventArgs e)
         {
-
+            ResetValues();
         }
 
         private void Color_Click(object sender, EventArgs e)
@@ -280,6 +280,25 @@ namespace vme
                 UpdMainForm();
                 Invalidate();
             }
+        }
+
+        private void ColoredTF_Paint(object sender, PaintEventArgs e) 
+        {
+            Bitmap bmp = new Bitmap(this.Width, this.Height);
+            Graphics gr = Graphics.FromImage(bmp);
+            DrawBoundaryAndGrid(gr);
+            if ((winWidth * winCentre) != 0)
+                DrawLines(gr);
+            if ((winWidth * winCentre) != 0)
+                DrawAxesLabels(gr);
+            if (!first)
+            {
+                DrawKnotsArray(gr);
+                DrawLine(gr);
+            }
+            e.Graphics.DrawImageUnscaled(bmp, 0, 0);
+            gr.Dispose();
+        
         }
     }
 }

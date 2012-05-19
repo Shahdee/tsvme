@@ -30,17 +30,14 @@
         {
             this.Open = new System.Windows.Forms.Button();
             this.Reset = new System.Windows.Forms.Button();
-            this.reset_fn = new System.Windows.Forms.Button();
             this.text_width = new System.Windows.Forms.Label();
             this.text_min = new System.Windows.Forms.Label();
             this.text_centre = new System.Windows.Forms.Label();
             this.text_max = new System.Windows.Forms.Label();
-            this.ColorDialog = new System.Windows.Forms.ColorDialog();
             this.AssignCA = new System.Windows.Forms.Button();
+            this.ColorTFobj = new vme.ColoredTF();
             this.TransferFunction = new vme.TransferFunction();
-            this.Histogram = new vme.Histogram();
             this.ImagePlane = new vme.Canvas();
-            this.Color = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Open
@@ -62,16 +59,6 @@
             this.Reset.Text = "По умолч. область ";
             this.Reset.UseVisualStyleBackColor = true;
             this.Reset.Click += new System.EventHandler(this.Reset_Click_1);
-            // 
-            // reset_fn
-            // 
-            this.reset_fn.Location = new System.Drawing.Point(446, 222);
-            this.reset_fn.Name = "reset_fn";
-            this.reset_fn.Size = new System.Drawing.Size(118, 35);
-            this.reset_fn.TabIndex = 7;
-            this.reset_fn.Text = "По умолч. функция";
-            this.reset_fn.UseVisualStyleBackColor = true;
-            this.reset_fn.Click += new System.EventHandler(this.reset_fn_Click);
             // 
             // text_width
             // 
@@ -117,7 +104,15 @@
             this.AssignCA.TabIndex = 13;
             this.AssignCA.Text = "Присвоить ц/п";
             this.AssignCA.UseVisualStyleBackColor = true;
-            this.AssignCA.Click += new System.EventHandler(this.AssignCA_Click);
+            // 
+            // ColorTFobj
+            // 
+            this.ColorTFobj.BackColor = System.Drawing.SystemColors.Control;
+            this.ColorTFobj.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ColorTFobj.Location = new System.Drawing.Point(23, 265);
+            this.ColorTFobj.Name = "ColorTFobj";
+            this.ColorTFobj.Size = new System.Drawing.Size(620, 350);
+            this.ColorTFobj.TabIndex = 14;
             // 
             // TransferFunction
             // 
@@ -128,15 +123,6 @@
             this.TransferFunction.Size = new System.Drawing.Size(378, 170);
             this.TransferFunction.TabIndex = 12;
             // 
-            // Histogram
-            // 
-            this.Histogram.BackColor = System.Drawing.SystemColors.Control;
-            this.Histogram.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.Histogram.Location = new System.Drawing.Point(23, 267);
-            this.Histogram.Name = "Histogram";
-            this.Histogram.Size = new System.Drawing.Size(615, 309);
-            this.Histogram.TabIndex = 6;
-            // 
             // ImagePlane
             // 
             this.ImagePlane.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -145,31 +131,19 @@
             this.ImagePlane.Size = new System.Drawing.Size(512, 512);
             this.ImagePlane.TabIndex = 1;
             // 
-            // Color
-            // 
-            this.Color.Location = new System.Drawing.Point(570, 222);
-            this.Color.Name = "Color";
-            this.Color.Size = new System.Drawing.Size(68, 35);
-            this.Color.TabIndex = 14;
-            this.Color.Text = "Цвет";
-            this.Color.UseVisualStyleBackColor = true;
-            this.Color.Click += new System.EventHandler(this.Color_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
-            this.Controls.Add(this.Color);
+            this.Controls.Add(this.ColorTFobj);
             this.Controls.Add(this.AssignCA);
             this.Controls.Add(this.TransferFunction);
             this.Controls.Add(this.text_max);
             this.Controls.Add(this.text_centre);
             this.Controls.Add(this.text_min);
             this.Controls.Add(this.text_width);
-            this.Controls.Add(this.reset_fn);
-            this.Controls.Add(this.Histogram);
             this.Controls.Add(this.Reset);
             this.Controls.Add(this.ImagePlane);
             this.Controls.Add(this.Open);
@@ -185,16 +159,13 @@
         private System.Windows.Forms.Button Open;
         private Canvas ImagePlane;
         private System.Windows.Forms.Button Reset;
-        private Histogram Histogram;
-        private System.Windows.Forms.Button reset_fn;
         public System.Windows.Forms.Label text_width;
         public System.Windows.Forms.Label text_min;
         public System.Windows.Forms.Label text_centre;
         public System.Windows.Forms.Label text_max;
         private TransferFunction TransferFunction;
-        private System.Windows.Forms.ColorDialog ColorDialog;
         private System.Windows.Forms.Button AssignCA;
-        private System.Windows.Forms.Button Color;
+        private ColoredTF ColorTFobj;
         
     }
 }

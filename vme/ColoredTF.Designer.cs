@@ -31,6 +31,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.Color = new System.Windows.Forms.Button();
             this.reset_fn = new System.Windows.Forms.Button();
+            this.ColorDialog = new System.Windows.Forms.ColorDialog();
             this.SuspendLayout();
             // 
             // label4
@@ -64,7 +65,10 @@
             this.reset_fn.Text = "По умолч. функция";
             this.reset_fn.UseVisualStyleBackColor = true;
             this.reset_fn.Click += new System.EventHandler(this.reset_fn_Click);
-            
+            // 
+            // ColorDialog
+            // 
+            this.ColorDialog.AnyColor = true;
             // 
             // ColoredTF
             // 
@@ -73,9 +77,10 @@
             this.Controls.Add(this.Color);
             this.Controls.Add(this.reset_fn);
             this.Controls.Add(this.label4);
-            this.MouseClick +=new System.Windows.Forms.MouseEventHandler(ColoredTF_MouseClick);
             this.Name = "ColoredTF";
             this.Size = new System.Drawing.Size(620, 350);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ColoredTF_Paint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ColoredTF_MouseClick);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -86,6 +91,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button Color;
         private System.Windows.Forms.Button reset_fn;
+        private System.Windows.Forms.ColorDialog ColorDialog;
         
     }
 }
