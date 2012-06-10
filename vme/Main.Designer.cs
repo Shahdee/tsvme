@@ -30,21 +30,20 @@
         {
             this.Open = new System.Windows.Forms.Button();
             this.Reset = new System.Windows.Forms.Button();
-            this.text_width = new System.Windows.Forms.Label();
-            this.text_min = new System.Windows.Forms.Label();
-            this.text_centre = new System.Windows.Forms.Label();
-            this.text_max = new System.Windows.Forms.Label();
             this.AssignCA = new System.Windows.Forms.Button();
-            this.ColorTFobj = new vme.ColoredTF();
-            this.TransferFunction = new vme.TransferFunction();
             this.ImagePlane = new vme.Canvas();
+            this.Windowing = new vme.Windowing();
+            this.ColoredTFobj = new vme.ColoredTF();
+            this.volume = new System.Windows.Forms.Button();
+            this.image_label = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Open
             // 
             this.Open.Location = new System.Drawing.Point(36, 21);
             this.Open.Name = "Open";
-            this.Open.Size = new System.Drawing.Size(118, 36);
+            this.Open.Size = new System.Drawing.Size(107, 36);
             this.Open.TabIndex = 0;
             this.Open.Text = "Открыть DICOM ";
             this.Open.UseVisualStyleBackColor = true;
@@ -52,49 +51,13 @@
             // 
             // Reset
             // 
-            this.Reset.Location = new System.Drawing.Point(283, 39);
+            this.Reset.Location = new System.Drawing.Point(425, 39);
             this.Reset.Name = "Reset";
-            this.Reset.Size = new System.Drawing.Size(118, 35);
+            this.Reset.Size = new System.Drawing.Size(95, 35);
             this.Reset.TabIndex = 4;
             this.Reset.Text = "По умолч. область ";
             this.Reset.UseVisualStyleBackColor = true;
-            this.Reset.Click += new System.EventHandler(this.Reset_Click_1);
-            // 
-            // text_width
-            // 
-            this.text_width.AutoSize = true;
-            this.text_width.Location = new System.Drawing.Point(422, 95);
-            this.text_width.Name = "text_width";
-            this.text_width.Size = new System.Drawing.Size(51, 13);
-            this.text_width.TabIndex = 8;
-            this.text_width.Text = "winWidth";
-            // 
-            // text_min
-            // 
-            this.text_min.AutoSize = true;
-            this.text_min.Location = new System.Drawing.Point(422, 178);
-            this.text_min.Name = "text_min";
-            this.text_min.Size = new System.Drawing.Size(40, 13);
-            this.text_min.TabIndex = 9;
-            this.text_min.Text = "winMin";
-            // 
-            // text_centre
-            // 
-            this.text_centre.AutoSize = true;
-            this.text_centre.Location = new System.Drawing.Point(422, 122);
-            this.text_centre.Name = "text_centre";
-            this.text_centre.Size = new System.Drawing.Size(54, 13);
-            this.text_centre.TabIndex = 10;
-            this.text_centre.Text = "winCentre";
-            // 
-            // text_max
-            // 
-            this.text_max.AutoSize = true;
-            this.text_max.Location = new System.Drawing.Point(422, 149);
-            this.text_max.Name = "text_max";
-            this.text_max.Size = new System.Drawing.Size(43, 13);
-            this.text_max.TabIndex = 11;
-            this.text_max.Text = "winMax";
+            this.Reset.Click += new System.EventHandler(this.Reset_Click);
             // 
             // AssignCA
             // 
@@ -105,24 +68,6 @@
             this.AssignCA.Text = "Присвоить ц/п";
             this.AssignCA.UseVisualStyleBackColor = true;
             // 
-            // ColorTFobj
-            // 
-            this.ColorTFobj.BackColor = System.Drawing.SystemColors.Control;
-            this.ColorTFobj.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ColorTFobj.Location = new System.Drawing.Point(23, 265);
-            this.ColorTFobj.Name = "ColorTFobj";
-            this.ColorTFobj.Size = new System.Drawing.Size(620, 350);
-            this.ColorTFobj.TabIndex = 14;
-            // 
-            // TransferFunction
-            // 
-            this.TransferFunction.BackColor = System.Drawing.SystemColors.Control;
-            this.TransferFunction.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.TransferFunction.Location = new System.Drawing.Point(23, 80);
-            this.TransferFunction.Name = "TransferFunction";
-            this.TransferFunction.Size = new System.Drawing.Size(378, 170);
-            this.TransferFunction.TabIndex = 12;
-            // 
             // ImagePlane
             // 
             this.ImagePlane.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -131,22 +76,68 @@
             this.ImagePlane.Size = new System.Drawing.Size(512, 512);
             this.ImagePlane.TabIndex = 1;
             // 
+            // Windowing
+            // 
+            this.Windowing.BackColor = System.Drawing.SystemColors.Control;
+            this.Windowing.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.Windowing.Location = new System.Drawing.Point(36, 80);
+            this.Windowing.Name = "Windowing";
+            this.Windowing.Size = new System.Drawing.Size(484, 180);
+            this.Windowing.TabIndex = 5;
+            // 
+            // ColoredTFobj
+            // 
+            this.ColoredTFobj.BackColor = System.Drawing.SystemColors.Control;
+            this.ColoredTFobj.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ColoredTFobj.Location = new System.Drawing.Point(36, 281);
+            this.ColoredTFobj.Name = "ColoredTFobj";
+            this.ColoredTFobj.Size = new System.Drawing.Size(620, 350);
+            this.ColoredTFobj.TabIndex = 6;
+            // 
+            // volume
+            // 
+            this.volume.Location = new System.Drawing.Point(679, 28);
+            this.volume.Name = "volume";
+            this.volume.Size = new System.Drawing.Size(75, 30);
+            this.volume.TabIndex = 7;
+            this.volume.Text = "3D";
+            this.volume.UseVisualStyleBackColor = true;
+            this.volume.Click += new System.EventHandler(this.volume_Click);
+            // 
+            // image_label
+            // 
+            this.image_label.AutoSize = true;
+            this.image_label.Location = new System.Drawing.Point(1016, 39);
+            this.image_label.Name = "image_label";
+            this.image_label.Size = new System.Drawing.Size(77, 13);
+            this.image_label.TabIndex = 8;
+            this.image_label.Text = "Изображение";
+            // 
+            // TestDataSet
+            // 
+            this.button1.Location = new System.Drawing.Point(173, 22);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(107, 36);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "загрузить тест";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.TestDataSet_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
-            this.Controls.Add(this.ColorTFobj);
-            this.Controls.Add(this.AssignCA);
-            this.Controls.Add(this.TransferFunction);
-            this.Controls.Add(this.text_max);
-            this.Controls.Add(this.text_centre);
-            this.Controls.Add(this.text_min);
-            this.Controls.Add(this.text_width);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.image_label);
+            this.Controls.Add(this.volume);
+            this.Controls.Add(this.ColoredTFobj);
+            this.Controls.Add(this.Windowing);
             this.Controls.Add(this.Reset);
             this.Controls.Add(this.ImagePlane);
             this.Controls.Add(this.Open);
+            this.KeyPreview = true;
             this.Name = "Main";
             this.Text = "vme";
             this.ResumeLayout(false);
@@ -159,13 +150,12 @@
         private System.Windows.Forms.Button Open;
         private Canvas ImagePlane;
         private System.Windows.Forms.Button Reset;
-        public System.Windows.Forms.Label text_width;
-        public System.Windows.Forms.Label text_min;
-        public System.Windows.Forms.Label text_centre;
-        public System.Windows.Forms.Label text_max;
-        private TransferFunction TransferFunction;
         private System.Windows.Forms.Button AssignCA;
-        private ColoredTF ColorTFobj;
+        private Windowing Windowing;
+        private ColoredTF ColoredTFobj;
+        private System.Windows.Forms.Button volume;
+        private System.Windows.Forms.Label image_label;
+        private System.Windows.Forms.Button button1;
         
     }
 }

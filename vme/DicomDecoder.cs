@@ -34,14 +34,14 @@ namespace vme
         const uint ICON_IMAGE_SEQUENCE = 0x00880200;
         const uint PIXEL_DATA = 0x7FE00010;
 
-        //There are three special SQ related Data Elements that are not ruled by the VR encoding rules conveyed by the Transfer Syntax. They shall be encoded as Implicit VR. 
+        //There are three special SQ related Data Elements that are not ruled by the VR encoding rules conveyed by the Transfer Syntax. They shall be encoded as Implicit VR. NEMA DICOM 3.0
         const string ITEM = "FFFEE000";
         const string ITEM_DELIMITATION = "FFFEE00D";
         const string SEQUENCE_DELIMITATION = "FFFEE0DD";
         //----
 
-        String dicomFileName;
-        int location = 0;
+        //String dicomFileName;
+
         const int FIRST_OFFSET = 128;
         const string DICM = "DICM";
 
@@ -51,18 +51,17 @@ namespace vme
         /* Все что относится к декодированию jpg lossless */
 
         JpegDecode jdec;   // декодировщик для jpg lossless см. ISO/IS 10918-1 и 10918-2
-
         private byte[] frag;
-        
-        public List<string> dicomInfo = new List<string>();
+       
+        public List<string> dicomInfo;
         BinaryReader file;
 
-        bool readingDataElements = true;
-        bool oddLocations = false;
+        bool readingDataElements;
+        bool oddLocations;
         bool inSequence;
 
         public double rescaleIntercept, rescaleSlope;
-        ushort planarConfiguration;
+        //ushort planarConfiguration;
 
         bool littleEndian = true; // by default
 
@@ -115,22 +114,19 @@ namespace vme
         public int samplesPerPixel;
         public ushort pixelRepresentation;
 
-        public 
+        public int location;
 
         String photoInterpretation;
         public double pixelDepth = 1.0;
         public double pixelWidth = 1.0;
         public double pixelHeight = 1.0;
         public string unit;
-        byte[] red;
-        byte[] green;
-        byte[] blue;
+
         List<byte> pixels8;
         List<ushort> pixels16;
-        List<byte> pixels24;
         private int ctrPixels;
 
-        bool delimiter = false;
+        bool delimiter;
 
         long pos=-1;  // для чтения сжатого jpg
 
@@ -143,13 +139,40 @@ namespace vme
 
         public DicomDecoder()
         {
+            dicomInfo = new List<string>();
             dic  = new DicomDictionary();
             jdec = new JpegDecode(); 
             signedImage = false;
             dicomFileReadSuccess = false;
             dicomInfo = new List<string>();
 
+            readingDataElements = true;
+            oddLocations = false;
+            delimiter = false;
+
+            location = 0;
             bitsAllocated = 0;
+            width = 1;
+            height = 1;
+            offset = 1;
+            nImages = 1;
+            samplesPerPixel = 1;
+            photoInterpretation = "";
+            unit = "mm";
+            compressedImage = false;
+            dicomDir = false;
+            windowCentre = 1;
+            windowWidth = 1;
+            signedImage = false;
+        }
+
+        public void EraseFields()
+        {
+            signedImage = false;
+            dicomFileReadSuccess = false;
+            location = 0;
+            bitsAllocated = 0;
+            readingDataElements = true;
             width = 1;
             height = 1;
             offset = 1;
@@ -579,8 +602,39 @@ namespace vme
                 ReadLosslessPixelData();
             else
                 ReadPixelData();
+            file.Close();
             return true;
         }
+
+        /*
+        public void FileClose() 
+        {
+            if (file != null)
+            {
+                file.Close();
+                dic = new DicomDictionary();
+                jdec = new JpegDecode();
+                signedImage = false;
+                dicomFileReadSuccess = false;
+                dicomInfo = new List<string>();
+                location = 0;
+                bitsAllocated = 0;
+                width = 1;
+                height = 1;
+                offset = 1;
+                nImages = 1;
+                samplesPerPixel = 1;
+                photoInterpretation = "";
+                unit = "mm";
+                compressedImage = false;
+                dicomDir = false;
+                windowCentre = 1;
+                windowWidth = 1;
+                signedImage = false;
+            }
+
+        }
+         * */
 
         public void GetPixels8(ref List<byte> pixels)
         {

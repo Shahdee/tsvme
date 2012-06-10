@@ -1,0 +1,221 @@
+
+void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
+{
+	global uchar* pixel = (global uchar*)(line + x);
+
+	pixel[0] = b;	//blue
+	pixel[1] = g;	//green
+	pixel[2] = r;	//red
+	pixel[3] = 255;	//alpha
+}
+
+bool intersectBBox(float4 rayStart, float4 rayDirection, float4 bboxMin, float4 bboxMax, float* tmin, float* tmax)
+{
+	float t0 = FLT_MIN;
+	float t1 = FLT_MAX;
+	
+	float invRayDir = 1.0f / rayDirection.S0;
+	float tNear = (bboxMin.S0 - rayStart.S0) * invRayDir;
+	float  tFar = (bboxMax.S0 - rayStart.S0) * invRayDir;
+	
+	if (tNear > tFar)
+	{
+		invRayDir = tFar;
+		tFar = tNear;
+		tNear = invRayDir;
+	}
+	t0 = tNear > t0 ? tNear : t0;
+	t1 = tFar < t1 ? tFar : t1;
+	if (t0 > t1)
+		return false;
+				
+	invRayDir = 1.0f / rayDirection.S1;
+	tNear = (bboxMin.S1 - rayStart.S1) * invRayDir;
+	tFar = (bboxMax.S1 - rayStart.S1) * invRayDir;
+	
+	if (tNear > tFar)
+	{
+		invRayDir = tFar;
+		tFar = tNear;
+		tNear = invRayDir;
+	}
+	t0 = tNear > t0 ? tNear : t0;
+	t1 = tFar < t1 ? tFar : t1;
+	if (t0 > t1)
+		return false;
+
+	invRayDir = 1.0f / rayDirection.S2;
+	tNear = (bboxMin.S2 - rayStart.S2) * invRayDir;
+	tFar = (bboxMax.S2 - rayStart.S2) * invRayDir;
+	
+	if (tNear > tFar)
+	{
+		invRayDir = tFar;
+		tFar = tNear;
+		tNear = invRayDir;
+	}
+	t0 = tNear > t0 ? tNear : t0;
+	t1 = tFar < t1 ? tFar : t1;
+	if (t0 > t1)
+		return false;
+
+	*tmin = t0;
+	*tmax = t1;
+
+	return true;
+}
+
+short getVolumeValue(float x, float y, float z, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax, short cut){
+
+	if(x < boxmin.S0 + 1 || x > boxmax.S0 - 1 ||
+	   y < boxmin.S1 + 1 || y > boxmax.S1 - 1 ||
+	   z < boxmin.S2 + 1 || z > boxmax.S2 - 1 ||
+	   x >= blocksize || x < 0 ||
+	   y >= blocksize || y < 0 ||
+	   z >= blocksize || z < 0){
+	   return 0;
+	}
+
+	if(cut == 1 && (volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] > colormin
+					&& volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] < colormax)){
+					return 0;
+	}
+
+	return volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)];	
+}
+
+
+float4 calculateGradient(float4 position,global short* volume, int blocksize, float4 boxmin, float4 boxmax,short colormin, short colormax,short cut){	
+	
+	float gradientX = 0;
+	float gradientY = 0;
+	float gradientZ = 0;
+
+
+		gradientX = getVolumeValue(position.s0 + 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
+		            getVolumeValue(position.s0 - 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
+		gradientY = getVolumeValue(position.s0, position.s1 + 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
+		            getVolumeValue(position.s0, position.s1 - 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
+		gradientZ = getVolumeValue(position.s0, position.s1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
+		            getVolumeValue(position.s0, position.s1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);		  
+
+	}
+	return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
+}
+
+float4 getColor(float4 pos, float4 norm, float4 lightPosition,global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax)
+{
+	float value = getVolumeValue(pos.s0,pos.s1,pos.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,0);
+	
+	float4 color;
+	if(value > colormin && value < colormax){
+		color=(float4)(1,0.5,0.5,0);
+	}else{
+		color=(float4)(1,1,1,0);
+	}
+
+	float4 livec = fast_normalize(lightPosition -  pos);
+	float illum = dot(livec,norm);
+	bool haslight = false;
+
+	if(illum > 0)
+	{
+		return illum * color;		
+		haslight = true;
+	}
+	return (float4)(0.0f,0.0f,0.0f,0.0f);
+}
+
+float4 traceRay(float4 raySource, 
+				float4 rayDirection, 
+				global short* volume, 
+				int blocksize, 
+				float4 lightPosition,
+				float4 boxmin,
+				float4 boxmax,
+				short colormin,
+				short colormax,
+				short cut){
+		
+	float tmin = 0;
+	float tmax = 0;
+	
+	if(!intersectBBox(raySource, 
+					  rayDirection,
+					  boxmin, 
+					  boxmax, 
+					  &tmin, 
+					  &tmax))
+	{
+		return (float4)(0.0f,0.0f,0.0f,0.0f);
+	}
+	
+	float4 actualPoint;
+	const float bigstep = 5;
+	const float smallstep = 0.5;
+
+	for(float t=tmin;t<tmax;t+=bigstep)
+	{
+		actualPoint = raySource + t * rayDirection;		
+		if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
+		{
+				for(float u=t-bigstep;u<tmax;u+=smallstep)
+				{																								  					
+					actualPoint = raySource + u * rayDirection;
+					if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
+					{
+						float4 gradient = calculateGradient(actualPoint,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
+						float4 color = getColor(actualPoint, gradient, lightPosition, volume, blocksize,boxmin,boxmax,colormin,colormax);
+						return (float4)(color.s0, color.S1, color.S2, 0);												
+					}
+				}
+		}		
+	}
+	return (float4)(0.0f,0.0f,0.0f,0.0f);
+}
+
+float4 getRayDirection(int width, int height, int x, int y, float4 forward, float4 right, float4 up)
+{
+	float ratio = (float)width / height;
+	float recenteredX = (x - (width/2)) / (2.0f * width) * ratio;
+	float recenteredY = (y - (height/2)) / (2.0f * height) ;
+	return fast_normalize(forward + (recenteredX * right) + (recenteredY * up));
+}
+ 
+kernel void RayCaster (int width, 
+                       int height, 
+					   global uchar* pOutput, 
+					   int outputStride, 
+					   float4 cameraPosition, 
+					   float4 cameraForward, 
+					   float4 cameraRight, 
+					   float4 cameraUp, 
+					   global short* volume, 
+					   int blocksize,
+					   float4 lightPosition,
+					   float4 boxmin,
+					   float4 boxmax,
+					   short colormin,
+					   short colormax,
+					   short cut)
+{
+	size_t x = get_global_id(0);
+	size_t y = get_global_id(1);	
+	global uchar4* pO = (global uchar4*)(pOutput+y*outputStride);
+	float4 rayDirection = getRayDirection(width, height, x, y, cameraForward, cameraRight, cameraUp);
+
+	float4 color = traceRay(cameraPosition, 
+							rayDirection, 
+							volume, 
+							blocksize, 
+							lightPosition,
+							boxmin,
+							boxmax,
+							colormin,
+							colormax,
+							cut);
+
+	setPixel(pO, x, (int)(color.s0 > 1 ? 255 : color.s0 * 255), 
+					(int)(color.s1 > 1 ? 255 : color.s1 * 255), 
+					(int)(color.s2 > 1 ? 255 : color.s2 * 255));
+}

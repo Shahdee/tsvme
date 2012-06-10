@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+
+
 
 
 namespace vme
@@ -18,19 +21,24 @@ namespace vme
         public bool readable = false;
 
         DicomDecoder dec;
-        List<byte> pixels8;
-        List<ushort> pixels16;
-        List<short> pixels16_signed; //
-        ushort[] histogram_main;
-        ushort[] histogram_HU_main;
+        public List<byte> pixels8;
+        public List<ushort> pixels16;
+        public List<ushort> pixels_volume;
+        long[] histogram;
+        public uint[] colored_array;
+        public uint[] colors;
+        public short[] boundaries; 
+        public int knots_counter;
+        VoxelImage vform;
 
+        public ushort num_of_images;
 
         public int imageWidth;
         public int imageHeight;
         public double winWidth;
         public double winCentre;
         public ushort bpp;
-        public int spp; // количество сэмплов на пиксель 1-градации серого и  для монохромных и  3-RGB 
+        public int spp;
         public bool signedImage;
         public short intercept;
         public short slope;
@@ -41,9 +49,14 @@ namespace vme
             dec = new DicomDecoder();
             pixels8 = new List<byte>();
             pixels16 = new List<ushort>();
-            pixels16_signed = new List<short>();  //
-            signedImage = false;
+            pixels_volume = new List<ushort>();
+            colored_array = new uint[256];
 
+            colors = new uint[256];
+            boundaries = new short[256]; 
+
+            signedImage = false;
+            num_of_images = 0;
         }
 
         private void Open_Click(object sender, EventArgs e)
@@ -54,9 +67,16 @@ namespace vme
 
             if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0))
             {
+                pixels16.Clear();
+                pixels8.Clear();
+                dec.EraseFields();
+                ImagePlane.EraseFields();
+
                 Cursor = Cursors.WaitCursor;
                 ReadAndDisplayDicomFile(ofd.FileName, ofd.SafeFileName);
                 Cursor = Cursors.Default;
+                image_label.Text = ofd.FileName;
+                num_of_images++;
             }
             ofd.Dispose();
         }
@@ -77,16 +97,15 @@ namespace vme
             bpp = dec.bitsAllocated; // количество бит на пиксель
             winCentre = dec.windowCentre; // средняя величина между самым ярким и самым тусклым пикселем
             winWidth = dec.windowWidth; // разница между самым ярким и самым тусклым пикселем
-            spp = dec.samplesPerPixel;  // количество сэмплов на пиксель
+            spp = dec.samplesPerPixel;
             if (dec.rescaleIntercept < 0)
             {
                 dec.signedImage = true;
-                ImagePlane.Signed16Image = true;
             }
-            ImagePlane.Signed16Image = dec.signedImage; // знаковое изображение или нет
+            signedImage = dec.signedImage;
+            ImagePlane.Signed16Image = dec.signedImage; // short или ushort изображение
             ImagePlane.NewImage = true;
-            histogram_main = new ushort[imageWidth * imageHeight];
-            histogram_HU_main = new ushort[imageWidth * imageHeight];
+            histogram = new long[256];
             if (spp == 1 && bpp == 8)
             {
                 pixels8.Clear();
@@ -97,7 +116,7 @@ namespace vme
                     winWidth = 256;
                     winCentre = 128;
                 }
-                ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram_main, histogram_HU_main);
+                ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram);
             }
             if (spp == 1 && bpp == 16)
             {
@@ -107,11 +126,13 @@ namespace vme
                 intercept = (short)dec.rescaleIntercept;
                 slope = (short)dec.rescaleSlope;
 
+               
+
                 // Учитываем Modality LUT
                 if (dec.rescaleIntercept < 0)
                 {
                     for (int i = 0; i < pixels16.Count; i++)
-                        pixels16_signed.Add((short)(pixels16[i] * slope + intercept));
+                        pixels16[i] = (ushort)(((short)(pixels16[i] * slope + intercept)) + 32768);
                 }
                 if (winCentre == 0 && winWidth == 0)
                 {
@@ -119,34 +140,52 @@ namespace vme
                     winCentre = 32768;
                 }
 
-                if (dec.rescaleIntercept < 0)
+                
+                for (int i = 0; i < pixels16.Count; i++)
                 {
-                    ImagePlane.SetParametersIntercept(ref pixels16_signed, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, histogram_main, histogram_HU_main);
+                    pixels_volume.Add(pixels16[i]);
                 }
-                else
-                    ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, histogram_main, histogram_HU_main);
-                ColorTFobj.PassAlong(this); // передача MainForm в Control Гистограмма
+
+                ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram);
+                ColoredTFobj.PassAlong(this);
             }
+
             /* если у нас 16bpp lossless CT изображение */
             if (spp == 1 && bpp == 16 && dec.compressedImage)
             {
-                //...
+                // позже доделать чтение lossless и учет предсказателя, притом что дерево уже построенно правильно и есть сырые данные
             }
         }
 
-        public void UpdateWindowLevel(int winWidth, int winCentre, Imagebpp bpp)
+        private void EraseHistogramArray()
         {
-            int winMin = Convert.ToInt32(winCentre - 0.5 * winWidth);
-            int winMax = winMin + winWidth;
-
-            this.TransferFunction.SetWindowWidthCentre(winMin, winMax, winWidth, winCentre, bpp, signedImage);
-            this.ColorTFobj.SetParametersHistogram(winMin, winMax, winWidth, winCentre, bpp, signedImage);
+            for (int i = 0; i < 256; i++)
+                histogram[i] = 0;
         }
 
-        public void UpdateFormHitosgram()
+        public void UpdateWindowLevel(int winWidth_from_Canvas, int winCentre_from_Canvas, Imagebpp bpp, long[] histogram)
         {
-            this.TransferFunction.Invalidate();
-            this.ImagePlane.Invalidate();
+            int winMin = Convert.ToInt32(winCentre_from_Canvas - 0.5 * winWidth_from_Canvas);
+            int winMax = winMin + winWidth_from_Canvas;
+
+            this.Windowing.SetWindowWidthCentre(winMin, winMax, winWidth_from_Canvas, winCentre_from_Canvas, bpp, signedImage);
+            this.ColoredTFobj.SetParametersHistogram(winMin, winMax, winWidth_from_Canvas, winCentre_from_Canvas, bpp, signedImage, histogram);
+        }
+
+        
+        public void UpdateFromColoredTF()
+        {
+            this.ImagePlane.viewcolor = false;
+            EraseHistogramArray();
+            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram);
+        }
+         
+
+        public void UpdateColorFromHistogram()
+        {
+            this.ImagePlane.viewcolor = true;
+            this.ImagePlane.EraseHistogramArray();
+            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram);
         }
 
         private void MainClose(object sender, FormClosingEventArgs e)
@@ -156,24 +195,24 @@ namespace vme
             ImagePlane.Dispose();
         }
 
-        private void Reset_Click_1(object sender, EventArgs e)
+        /*  По умолчанию область*/
+        private void Reset_Click(object sender, EventArgs e)
         {
-            if ((pixels8.Count > 0) || (pixels16.Count > 0) || (pixels16_signed.Count > 0))
+            if (pixels8 != null || pixels16 != null)
             {
-                ImagePlane.ResetValues();
-                if (bpp == 8)
+                if ((pixels8.Count > 0) || (pixels16.Count > 0))
                 {
-                    if (spp == 1)
-                        ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram_main, histogram_HU_main);
-                }
-
-                if (bpp == 16)
-                {
-                    if (intercept == 0)
-                        ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, histogram_main, histogram_HU_main);
-                    else
+                    EraseHistogramArray();
+                    ImagePlane.viewcolor = false;
+                    if (bpp == 8)
                     {
-                        ImagePlane.SetParametersIntercept(ref pixels16_signed, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, histogram_main, histogram_HU_main);
+                        if (spp == 1)
+                            ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram);
+                    }
+
+                    if (bpp == 16)
+                    {
+                        ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram);
                     }
                 }
             }
@@ -181,7 +220,35 @@ namespace vme
                 MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров!");
         }
 
+        private void volume_Click(object sender, EventArgs e)
+        {
+            vform = new VoxelImage();
+            vform.VoxelImage_Load(pixels_volume, num_of_images, dec.windowCentre, dec.windowWidth, dec.rescaleIntercept, dec.signedImage, this);
+            vform.Idle(); 
+            vform.Show();
+        }
 
+        private void TestDataSet_Click(object sender, EventArgs e)
+        {
+            string path = "E:\\tsvme\\images 2\\ich\\";
 
+            for (int i = 1; i < 167; i++)
+            {
+                
+                string safename ="_"+Convert.ToString(i);
+                pixels16.Clear();
+                pixels8.Clear();
+                dec.EraseFields();
+                ImagePlane.EraseFields();
+                Cursor = Cursors.WaitCursor;
+                ReadAndDisplayDicomFile(path+safename, safename);
+                Cursor = Cursors.Default;
+                image_label.Text = path + safename;
+                num_of_images++;
+                dec.GetPixels16(ref pixels16);
+            }
+        }
     }
 }
+
+

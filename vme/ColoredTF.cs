@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using OpenCLNet;
 
 namespace vme
 {
@@ -19,29 +20,30 @@ namespace vme
         int graphWidth;
         int graphHeight;
 
-
         int winWidth;
         int winCentre;
         int winMin;
         int winMax;
 
-
         Main form_this;
-        bool first;
-        public Knot pp; // last upd
-        List<Knot> knots; // массив узловых точек
 
+        public Knot pp; 
+        List<Knot> knots; // массив узловых точек
+        long[] histogram_255;
         Imagebpp iBpp;
+
         bool signedImage;
+        bool first;
+        bool paint_histogram;
 
         public ColoredTF()
         {
             InitializeComponent();
             DoubleBuffered = true;
-            marginLeft = 25;
-            marginRight = 50;
-            marginTop = 50;
-            marginBottom = 20;
+            marginLeft = 182;
+            marginRight = 182;
+            marginTop = 75;
+            marginBottom = 74;
             pp.p.X = 0;
             pp.p.Y = 0;
 
@@ -49,6 +51,7 @@ namespace vme
             winCentre = 0;
             signedImage = false;
 
+            paint_histogram = false;
             first = true; // last upd
             knots = new List<Knot>();
             pp = new Knot();
@@ -63,17 +66,19 @@ namespace vme
             form_this = form;
         }
 
-        public void SetParametersHistogram(int minVal, int maxVal, int widthVal, int centreVal,
-            Imagebpp bpp, bool sign)
+        public void SetParametersHistogram(int minVal, int maxVal, int widthVal, int centreVal, Imagebpp bpp, bool sign, long[] histogram)
         {
 
             winMin = minVal;
             winMax = maxVal;
             winWidth = widthVal;
             winCentre = centreVal;
-            first = false;  // last upd
+            first = false;
+            
             iBpp = bpp;
             signedImage = sign;
+            histogram_255 = histogram;
+            paint_histogram = true;
             Invalidate();
         }
 
@@ -81,13 +86,96 @@ namespace vme
         public void ResetValues()
         {
             knots.Clear();  // очистить все контрольные точки и этого достаточно
-            Point ini = new Point(marginLeft + 1, this.Height - marginBottom - 1);
-            Knot d;
-            d.p = ini;
-            d.c = System.Drawing.Color.White;
-            knots.Add(d);
-            form_this.UpdateFormHitosgram();
+            paint_histogram = true;
+
+            pp.p = new Point(marginLeft + 1, this.Height - marginBottom - 1); // устанавливается единственная точка в нуле по умолчанию
+            pp.c = System.Drawing.Color.Black;
+            knots.Add(pp);
+
+            form_this.UpdateFromColoredTF();
             Invalidate();
+        }
+
+        private uint ColorBytesToUInt(byte b3, byte b2, byte b1, byte b0)
+        {
+            return (uint)((b3 << 24) + (b2 << 16) + (b1 << 8) + b0);
+        }
+
+        private uint ColorToUInt(Color c) // GBRA
+        {
+            uint  gu =c.G
+                , bu= c.B
+                , ru =c.R
+                , au= c.A;
+
+            return (uint)((gu << 24) + (bu << 16) + (ru << 8) + au);
+        }
+
+        private Float4 UIntToColor(uint color)
+        {
+            byte G;
+            byte B;
+            byte R;
+            byte A;
+
+            Float4 Color;
+
+            uint colorX;
+            uint res32;
+            uint res24;
+            uint res16;
+            
+            uint two_in_24_max = (1 << 24) -1; // max 
+            ushort two_in_16_max = (1 << 16)-1; // max 
+            
+            if (color > two_in_24_max)
+            {
+                G = (byte)(color >> 24); // res24
+                colorX = color >> 24;
+                res32 = colorX << 24;
+                color -= res32;
+
+            }
+            else 
+            {
+                G = 0;
+            }
+            if (color > two_in_16_max)
+            {
+                B = (byte)(color>>16);
+                colorX = color >> 16;
+                res24 = colorX << 16;
+                color -= res24;
+            }
+            else 
+            {
+                B = 0;
+            }
+            if (color > 255)
+            {
+                R =(byte)(color>>8);
+                colorX = color >> 8;
+                res16 = colorX << 8;
+                color -= res16;
+            }
+            else
+            {
+                R = 0;
+                A = (byte)(color);
+                Color.S0 = G;
+                Color.S1 = B;
+                Color.S2 = R;
+                Color.S3 = A;
+                return Color;
+            }
+            A = (byte)color;
+            Color.S0 = G;
+            Color.S1 = B;
+            Color.S2 = R;
+            Color.S3 = A;
+            return Color;
+           
+           
         }
 
         /*метод рисует границы и сетку*/
@@ -100,7 +188,7 @@ namespace vme
             Point pt3 = new Point(Width - marginRight, Height - marginBottom);
             Point pt4 = new Point(marginLeft, Height - marginBottom);
             Pen p = new Pen(System.Drawing.Color.LightGray);
-            Brush br = new SolidBrush(System.Drawing.Color.LightYellow);
+            Brush br = new SolidBrush(System.Drawing.Color.White);
 
             // задний фон 
             Rectangle rect = new Rectangle(pt1.X, pt1.Y, pt2.X - pt1.X, pt3.Y - pt1.Y);
@@ -112,7 +200,7 @@ namespace vme
             ph11 = new Point();
             ph21 = new Point();
 
-            int iNoVDivisions = 10, iNoHDivisions = 10;
+            int iNoVDivisions = 10, iNoHDivisions = 8;
             int iVertSpace = Convert.ToInt32((Height - marginTop - marginBottom) / iNoVDivisions);
             int iHorizSpace = Convert.ToInt32((Width - marginLeft - marginRight) / iNoHDivisions);
 
@@ -162,7 +250,7 @@ namespace vme
             PointF p = new PointF();
             p.X = marginLeft - 24;
             p.Y = marginTop - 2;
-            gr.DrawString("255", f, br, p);
+            gr.DrawString("100", f, br, p);
 
             p.X = marginLeft - 10;
             p.Y = marginTop + graphHeight - 12;
@@ -179,18 +267,10 @@ namespace vme
                 gr.DrawString("0", f, br, p);
                 p.X = marginLeft + graphWidth - 19;
             }
-            else //16
+            else 
             {
-                if (signedImage == true)
-                {
-                    strMax = "32767";
-                    strMin = "-32768";
-                }
-                else
-                {
-                    strMax = "65535";
-                    strMin = "0";
-                }
+                strMin = Convert.ToString(winMin + short.MinValue);
+                strMax = Convert.ToString(winMax + short.MinValue);
             }
 
             // метки на горизонтальных линиях
@@ -208,15 +288,16 @@ namespace vme
             p.X = marginLeft - 20;
             p.Y = marginTop + 25;
             StringFormat sf = new StringFormat(StringFormatFlags.DirectionVertical);
-            gr.DrawString("Яркость[bpp] и прозрачность[%]", f, br, p, sf);
+            gr.DrawString("Яркость[bpp] и непрозрачность[%]", f, br, p, sf);
 
             f.Dispose();
             br.Dispose();
         }
 
+        /* Отрисовка линий между контрольными точками */
         private void DrawLine(Graphics g)
         {
-            Pen pn = new Pen(System.Drawing.Color.Coral);
+            Pen pn = new Pen(System.Drawing.Color.Chocolate);
             if (knots.Count > 1)
             {
                 for (int i = 0; i < knots.Count - 1; i++)
@@ -225,24 +306,28 @@ namespace vme
             pn.Dispose();
         }
 
+        /* Отрисовка массива точек */
         private void DrawKnotsArray(Graphics g)
         {
             for (int i = 0; i < knots.Count; i++)
                 DrawPoint(g, knots[i]);
         }
 
+        /* Отрисовка 1 точки */
         private void DrawPoint(Graphics g, Knot j)
         {
             Pen pn = new Pen(j.c);
+            SolidBrush brush = new SolidBrush(j.c);
+            pn.DashStyle = DashStyle.DashDot;
             pn.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-
             g.DrawEllipse(pn, j.p.X - 3, j.p.Y - 3, 6, 6);
+            g.FillEllipse(brush, j.p.X - 3, j.p.Y - 3, 6, 6);
             pn.Dispose();
         }
 
         void UpdMainForm()
         {
-            form_this.UpdateFormHitosgram();
+            form_this.UpdateFromColoredTF();
         }
 
         private bool CanDraw()
@@ -253,33 +338,70 @@ namespace vme
                     return false;
             }
             return true;
-
         }
 
 
         private void reset_fn_Click(object sender, EventArgs e)
         {
-            ResetValues();
+            if (form_this!=null)
+            {
+                ResetValues(); 
+            }
+            else
+                MessageBox.Show("Сначала загрузите DICOM файл");
         }
 
         private void Color_Click(object sender, EventArgs e)
         {
             ColorDialog MyDialog = new ColorDialog();
-            MyDialog.AllowFullOpen = false;
-            pp.c = MyDialog.Color;
+            MyDialog.AllowFullOpen = true;
+            MyDialog.ShowHelp = true;
+            MyDialog.Color = pp.c;
+            if (MyDialog.ShowDialog() == DialogResult.OK)
+                pp.c = MyDialog.Color;
         }
 
         private void ColoredTF_MouseClick(object sender, MouseEventArgs e) 
         {
-            pp.p.X = e.X; // !
-            pp.p.Y = e.Y;
-            // цвет присваивается за счет указания через ColorDialog
-            if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && CanDraw() && form_this != null)
+            if (form_this != null)
             {
-                knots.Add(pp);
-                UpdMainForm();
-                Invalidate();
+                pp.p.X = e.X; // !
+                pp.p.Y = e.Y;
+                paint_histogram = true;
+                // цвет присваивается за счет указания через ColorDialog
+                if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && CanDraw() && form_this != null)
+                {
+                    knots.Add(pp);
+                    Invalidate();
+                }
             }
+        }
+
+        /* Строит гистограмму для текущего *окна* изображения  */
+        private void DrawHistogram(Graphics g) 
+        {
+            float height;
+            int py;  // то что надо отрисовать на оси y в форме
+            int pos = marginLeft + 1;
+            double cons_t = ((5.5) - (0.1)) / (Math.Log10(512*512) - Math.Log10(0.1));
+
+            for (int i = 0; i < 256; i++) 
+            {
+                py = (int)( (0.1) + cons_t * (Math.Log10(histogram_255[i]) - Math.Log10(0.1)) );
+                height = (float)(py * ((this.Height - 2 - marginBottom - marginTop)) / (Math.Log10(512 * 512)));
+                py = (int)(height);
+
+                if (height > 0)
+                {
+                    Pen pn = new Pen(System.Drawing.Color.LightGray);
+                    Point p1 = new Point(pos, this.Height - marginBottom - 1);
+                    Point p2 = new Point(pos, this.Height - marginBottom - 1 - py);
+                    g.DrawLine(pn, p1, p2);
+                }
+                pos++;
+                   
+            }
+            paint_histogram = false;
         }
 
         private void ColoredTF_Paint(object sender, PaintEventArgs e) 
@@ -291,14 +413,119 @@ namespace vme
                 DrawLines(gr);
             if ((winWidth * winCentre) != 0)
                 DrawAxesLabels(gr);
+            if (paint_histogram)
+            {
+                DrawHistogram(gr);
+            }
             if (!first)
             {
                 DrawKnotsArray(gr);
                 DrawLine(gr);
             }
+            
             e.Graphics.DrawImageUnscaled(bmp, 0, 0);
             gr.Dispose();
         
         }
+
+        private short Transformation(int px)
+        {
+
+            double factor = (double)(255 / (double)(winMax - winMin));
+            return (short)(((px / factor) + winMin) - 32768);
+
+        }
+
+        private void Test() 
+        {
+           
+            byte ctr;
+            Float4 col;
+
+            for (short i = -120; i < 240; i++) 
+            {
+                ctr = 0;
+                while (i > form_this.boundaries[ctr] && ctr < (form_this.knots_counter - 1)) // пока мы не дошли до того цвета, которым закрашен этот воксель и пока мы не дошли до границ окна
+                {
+                    ctr++;
+                }
+                col = (Float4)(UIntToColor(form_this.colors[ctr]));
+            }
+        
+        }
+
+        private void presets_TextChanged(object sender, EventArgs e) 
+        {
+            
+            if (presets.Text == "Кости") 
+            {
+                
+                if (form_this != null)
+                {
+                    for(int i=1; i<6; i++)
+                    {
+                        switch (i)
+                        {
+                            case 1: {pp.p.X = 269; pp.p.Y = 270; pp.c =System.Drawing.Color.Black;  break;}
+                            case 2: {pp.p.X = 281; pp.p.Y = 251; pp.c =System.Drawing.Color.FromArgb(255,128,64);  break;}
+                            case 3: {pp.p.X = 294; pp.p.Y = 239; pp.c =System.Drawing.Color.FromArgb(255,128,0); break;}
+                            case 4: {pp.p.X = 314; pp.p.Y = 231; pp.c =System.Drawing.Color.FromArgb(255,0,0); break;}
+                            case 5: {pp.p.X = 429; pp.p.Y = 224; pp.c =System.Drawing.Color.FromArgb(255,255,255); break;}
+
+                        }
+               
+                        if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && CanDraw() && form_this != null)
+                        {
+                            knots.Add(pp);
+                        
+                        }
+                    }
+                    paint_histogram = true;
+                    Invalidate();
+                }
+            }
+            if (presets.Text == "Мышцы")
+            {
+                
+            }
+        }
+
+        /* применят передаточную функцию к массиву, а потом к изображению */
+        private void Apply_Click(object sender, EventArgs e)
+        {
+            if (form_this != null)
+            {
+                byte acc = 0;
+                form_this.colored_array.Initialize();
+                form_this.colors.Initialize();
+                form_this.boundaries.Initialize();
+                form_this.knots_counter = knots.Count;
+                for (int i = 1; i < knots.Count; i++)
+                {
+                    for (int j = knots[i - 1].p.X - marginLeft - 1; j < knots[i].p.X - marginLeft - 1; j++)
+                    {
+                        acc++;
+                        form_this.colored_array[j] = ColorToUInt(knots[i].c);  // СѓРїР°РєРѕРІРєР° С†РІРµС‚РѕРІ РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє РІ uint
+                        
+                    }
+                    form_this.colors[i - 1] = ColorToUInt(knots[i].c);
+                    UIntToColor(form_this.colors[i - 1]);
+                    form_this.boundaries[i - 1] = Transformation(knots[i].p.X - marginLeft - 1); // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїРѕС‚РѕРј List
+                }
+                if (acc != 255) // Придаем цвет тем точкам, которые находятся правее передаточной функции, то есть им по каким-либо причинам не был присвоен цвет
+                {
+                    for (int j = acc; j < 256; j++)
+                    {
+                        form_this.colored_array[j] = ColorToUInt(knots[knots.Count - 1].c); // упаковка цветов контрольных точек в uint
+
+                    }
+                }
+                Test();
+                form_this.UpdateColorFromHistogram();
+            }
+            else
+                MessageBox.Show("Сначала загрузите DICOM файл");
+        }
+
     }
 }

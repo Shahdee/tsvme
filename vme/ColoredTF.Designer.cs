@@ -32,6 +32,8 @@
             this.Color = new System.Windows.Forms.Button();
             this.reset_fn = new System.Windows.Forms.Button();
             this.ColorDialog = new System.Windows.Forms.ColorDialog();
+            this.Apply = new System.Windows.Forms.Button();
+            this.presets = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // label4
@@ -40,7 +42,7 @@
             this.label4.BackColor = System.Drawing.SystemColors.Control;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.ForeColor = System.Drawing.Color.Green;
-            this.label4.Location = new System.Drawing.Point(184, 0);
+            this.label4.Location = new System.Drawing.Point(176, 11);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(230, 13);
             this.label4.TabIndex = 6;
@@ -70,10 +72,35 @@
             // 
             this.ColorDialog.AnyColor = true;
             // 
+            // Apply
+            // 
+            this.Apply.Location = new System.Drawing.Point(570, 44);
+            this.Apply.Name = "Apply";
+            this.Apply.Size = new System.Drawing.Size(47, 35);
+            this.Apply.TabIndex = 17;
+            this.Apply.Text = "Прим.";
+            this.Apply.UseVisualStyleBackColor = true;
+            this.Apply.Click += new System.EventHandler(this.Apply_Click);
+            // 
+            // presets
+            // 
+            this.presets.FormattingEnabled = true;
+            this.presets.Items.AddRange(new object[] {
+            "---",
+            "Кости",
+            "Мышцы"});
+            this.presets.Location = new System.Drawing.Point(482, 98);
+            this.presets.Name = "presets";
+            this.presets.Size = new System.Drawing.Size(121, 21);
+            this.presets.TabIndex = 19;
+            this.presets.TextChanged += new System.EventHandler(this.presets_TextChanged);
+            // 
             // ColoredTF
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.presets);
+            this.Controls.Add(this.Apply);
             this.Controls.Add(this.Color);
             this.Controls.Add(this.reset_fn);
             this.Controls.Add(this.label4);
@@ -92,6 +119,8 @@
         private System.Windows.Forms.Button Color;
         private System.Windows.Forms.Button reset_fn;
         private System.Windows.Forms.ColorDialog ColorDialog;
+        private System.Windows.Forms.Button Apply;
+        private System.Windows.Forms.ComboBox presets;
         
     }
 }
