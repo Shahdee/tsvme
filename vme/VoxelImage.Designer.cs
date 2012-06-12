@@ -407,7 +407,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
-
+            this.FormClosing+=new System.Windows.Forms.FormClosingEventHandler(VoxelImage_FormClosing); 
         }
 
         #endregion

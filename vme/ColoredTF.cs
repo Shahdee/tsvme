@@ -96,6 +96,8 @@ namespace vme
             Invalidate();
         }
 
+        #region ColorMix
+    
         private uint ColorBytesToUInt(byte b3, byte b2, byte b1, byte b0)
         {
             return (uint)((b3 << 24) + (b2 << 16) + (b1 << 8) + b0);
@@ -178,6 +180,9 @@ namespace vme
            
         }
 
+        #endregion
+
+        #region Grid
         /*метод рисует границы и сетку*/
         private void DrawBoundaryAndGrid(Graphics g)
         {
@@ -200,7 +205,7 @@ namespace vme
             ph11 = new Point();
             ph21 = new Point();
 
-            int iNoVDivisions = 10, iNoHDivisions = 8;
+            int iNoVDivisions = 8, iNoHDivisions = 8;
             int iVertSpace = Convert.ToInt32((Height - marginTop - marginBottom) / iNoVDivisions);
             int iHorizSpace = Convert.ToInt32((Width - marginLeft - marginRight) / iNoHDivisions);
 
@@ -294,6 +299,8 @@ namespace vme
             br.Dispose();
         }
 
+        #endregion
+
         /* Отрисовка линий между контрольными точками */
         private void DrawLine(Graphics g)
         {
@@ -380,28 +387,33 @@ namespace vme
         /* Строит гистограмму для текущего *окна* изображения  */
         private void DrawHistogram(Graphics g) 
         {
-            float height;
-            int py;  // то что надо отрисовать на оси y в форме
+            float koeffy;
+            float perc;
             int pos = marginLeft + 1;
-            double cons_t = ((5.5) - (0.1)) / (Math.Log10(512*512) - Math.Log10(0.1));
+            int py = 0;  // то что надо отрисовать на оси y в форме
+
+            koeffy = ((float)100.0 / (float)(this.Height - marginTop - marginBottom - 1)); 
 
             for (int i = 0; i < 256; i++) 
             {
-                py = (int)( (0.1) + cons_t * (Math.Log10(histogram_255[i]) - Math.Log10(0.1)) );
-                height = (float)(py * ((this.Height - 2 - marginBottom - marginTop)) / (Math.Log10(512 * 512)));
-                py = (int)(height);
 
-                if (height > 0)
+                if (histogram_255[i] > 0)
                 {
+
+
+                    perc = (float)((100 * (Math.Log10(histogram_255[i]))) / ((float)(Math.Log10(form_this.imageWidth * form_this.imageHeight))));
+                    py = (int)(perc / koeffy);
+
                     Pen pn = new Pen(System.Drawing.Color.LightGray);
                     Point p1 = new Point(pos, this.Height - marginBottom - 1);
                     Point p2 = new Point(pos, this.Height - marginBottom - 1 - py);
                     g.DrawLine(pn, p1, p2);
                 }
                 pos++;
+
                    
             }
-            paint_histogram = false;
+            //paint_histogram = false;
         }
 
         private void ColoredTF_Paint(object sender, PaintEventArgs e) 
@@ -428,12 +440,20 @@ namespace vme
         
         }
 
-        private short Transformation(int px)
+        private short TransformationPx(int px)
         {
 
             double factor = (double)(255 / (double)(winMax - winMin));
             return (short)(((px / factor) + winMin) - 32768);
 
+        }
+
+        private byte TransformationPy(int py) 
+        {
+            float perc;
+            float koeffy = ((float)100.0 / (float)(this.Height - marginTop - marginBottom - 1));
+            perc = py * koeffy;
+            return (byte)perc;
         }
 
         private void Test() 
@@ -510,7 +530,8 @@ namespace vme
                     }
                     form_this.colors[i - 1] = ColorToUInt(knots[i].c);
                     UIntToColor(form_this.colors[i - 1]);
-                    form_this.boundaries[i - 1] = Transformation(knots[i].p.X - marginLeft - 1); // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїРѕС‚РѕРј List
+                    form_this.boundaries[i - 1] = TransformationPx(knots[i].p.X - marginLeft - 1); // РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РїРѕС‚РѕРј List
+                    form_this.opacity[i - 1] = TransformationPy(this.Height-knots[i].p.Y - marginBottom - 1);
                 }
                 if (acc != 255) // Придаем цвет тем точкам, которые находятся правее передаточной функции, то есть им по каким-либо причинам не был присвоен цвет
                 {

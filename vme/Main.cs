@@ -26,9 +26,10 @@ namespace vme
         public List<ushort> pixels_volume;
         long[] histogram;
         public uint[] colored_array;
-        public uint[] colors;
-        public short[] boundaries; 
-        public int knots_counter;
+        public uint[] colors; // для передачи в DVR
+        public short[] boundaries;  // тоже для передачи в DVR 
+        public byte[] opacity;
+        public int knots_counter; 
         VoxelImage vform;
 
         public ushort num_of_images;
@@ -54,6 +55,7 @@ namespace vme
 
             colors = new uint[256];
             boundaries = new short[256]; 
+            opacity = new byte[256];
 
             signedImage = false;
             num_of_images = 0;

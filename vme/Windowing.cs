@@ -104,7 +104,7 @@ namespace vme
             ph11 = new Point();
             ph21 = new Point();
 
-            int i, iNoVDivisions = 10, iNoHDivisions = 10;
+            int i, iNoVDivisions = 8, iNoHDivisions = 8;
             int iVertSpace = Convert.ToInt32((Height - marginTop - marginBottom) / iNoVDivisions);
             int iHorizSpace = Convert.ToInt32((Width - marginLeft - marginRight) / iNoHDivisions);
 

@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using OpenCLNet;
 using System.Linq;
 
+
 namespace vme
 {
     public partial class VoxelImage : Form
@@ -22,7 +23,7 @@ namespace vme
         private bool rightChange;
         private bool changeDistance;
         private Bitmap output = new Bitmap(512, 512, PixelFormat.Format32bppArgb);
-        private VoxelVolume vol;
+        public VoxelVolume vol;
         private Float4 camPos;
         private Float4 camPosOld;
         private float  camAngle;
@@ -41,6 +42,10 @@ namespace vme
         private Kernel kernel;
         private Point oldMousePos;
         Main form_this;
+        public Mem outputBuffer;
+        public Mem color_buffer;
+        public Mem boundaries;
+        
 
 
         public VoxelImage()
@@ -57,10 +62,13 @@ namespace vme
             this.minX.Text = Convert.ToString(boxMinCon.S0);
             this.minY.Text = Convert.ToString(boxMinCon.S1);
             this.minZ.Text = Convert.ToString(boxMinCon.S2);
-
             this.maxX.Text = Convert.ToString(boxMaxCon.S0);
             this.maxY.Text = Convert.ToString(boxMaxCon.S1);
             this.maxZ.Text = Convert.ToString(boxMaxCon.S2);
+
+            outputBuffer = null;
+            color_buffer =null;
+            boundaries = null;
         }
 
         public void  Draw()
@@ -115,19 +123,21 @@ namespace vme
 
         private unsafe Mem GetColors()
         {
-            Mem color_buffer;
 
-            fixed (uint* dataptr = form_this.colors) 
+            fixed (uint* dataptr = form_this.colors)
+            {
                 color_buffer = manager.Context.CreateBuffer(MemFlags.COPY_HOST_PTR, form_this.colors.Count() * 4, new IntPtr(dataptr));
+            }
             return color_buffer;
         }
 
         private unsafe Mem GetBoundaries()
         {
-            Mem boundaries;
 
             fixed (short* dataptr = form_this.boundaries)
+            {   
                 boundaries = manager.Context.CreateBuffer(MemFlags.COPY_HOST_PTR, form_this.boundaries.Count() * 2, new IntPtr(dataptr));
+            }
             return boundaries;
 
         }
@@ -136,7 +146,7 @@ namespace vme
          
         private unsafe void DoRayCasting(BitmapData output)
         {
-            Mem outputBuffer = null;
+           
             try
             {
                 int deviceIndex = 0;
@@ -236,7 +246,7 @@ namespace vme
                         kernel.SetArg(5, camForward);
                         kernel.SetArg(6, right);
                         kernel.SetArg(7, up);
-                        kernel.SetArg(8, vol.GetBuffer());
+                        kernel.SetArg(8, vol.CreateBuffer());
                         kernel.SetArg(9, vol.GetSize());
                         kernel.SetArg(10, light);
                         kernel.SetArg(11, boxMinCon);
@@ -252,7 +262,7 @@ namespace vme
                         kernel.SetArg(21, Convert.ToInt16(colorMi2.Text));
                         kernel.SetArg(22, Convert.ToInt16(colorMa2.Text));
 
-                        
+                  
                         /* Ставит в очередь команду для исполнения kernel на устройстве */
                         /*
                             rayTracingGlobalOffset - 
@@ -289,6 +299,7 @@ namespace vme
                 if (outputBuffer != null)
                 {
                     outputBuffer.Dispose();
+
                 }
             }
 
@@ -341,6 +352,8 @@ namespace vme
             program = manager.CompileSource(Properties.Resources.DVR);
             kernel = program.CreateKernel("DVR");
         }
+
+        #region Transformations
 
         private void VSurface_Paint(object sender, PaintEventArgs e)
         {
@@ -401,7 +414,6 @@ namespace vme
             VSurface.Focus();
         }
 
-
         private void left_Click(object sender, EventArgs e)
         {
             angleChange = true;
@@ -427,7 +439,6 @@ namespace vme
                 VSurface.Refresh();
             }
         }
-
 
         private void up_Click(object sender, EventArgs e)
         {
@@ -456,46 +467,100 @@ namespace vme
         private void lx_TextChanged(object sender, EventArgs e) 
         {
             light.S0 = (float)(Convert.ToDouble(this.lx.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void ly_TextChanged(object sender, EventArgs e)
         {
             light.S1 = (float)(Convert.ToDouble(this.ly.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void lz_TextChanged(object sender, EventArgs e)
         {
             light.S2 = (float)(Convert.ToDouble(this.lz.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void minX_TextChanged(object sender, EventArgs e) 
         {
             boxMinCon.S0 = (float)(Convert.ToDouble(this.minX.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void minY_TextChanged(object sender, EventArgs e)
         {
             boxMinCon.S1 = (float)(Convert.ToDouble(this.minY.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void minZ_TextChanged(object sender, EventArgs e)
         {
             boxMinCon.S2 = (float)(Convert.ToDouble(this.minZ.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void maxX_TextChanged(object sender, EventArgs e)
         {
             boxMaxCon.S0 = (float)(Convert.ToDouble(this.maxX.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void maxY_TextChanged(object sender, EventArgs e)
         {
             boxMaxCon.S1 = (float)(Convert.ToDouble(this.maxY.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void maxZ_TextChanged(object sender, EventArgs e)
         {
             boxMaxCon.S2 = (float)(Convert.ToDouble(this.maxZ.Text));
+
+            if (initialize)
+            {
+                Draw();
+                VSurface.Refresh();
+            }
         }
 
         private void VSurface_MouseWheel(object sender, MouseEventArgs e)
@@ -556,6 +621,27 @@ namespace vme
                 oldMousePos = e.Location;
             }
         }
+
+
+    #endregion
+
+
+        private void VoxelImage_FormClosing(object sender, EventArgs e)
+        {
+            vol.ReturnBuffer().Dispose();
+            color_buffer.Dispose();
+            boundaries.Dispose();
+            manager.CQ[0].Dispose();
+            kernel.Dispose();
+            program.Dispose();
+            manager.Context.Dispose();
+            manager.Dispose();
+            VSurface.Dispose();
+            GC.Collect();
+
+        }
+
+        
 
     }
         

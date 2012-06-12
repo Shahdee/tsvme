@@ -64,7 +64,7 @@ short valexist(float x, float y, float z,global short* volume, int size, float4 
 float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon, float4  boxMaxCon, short  winMin, short  winMax, short  carve, short interpolation, short  winMin2, short  winMax2)
 {
 
-	/*
+
 	float Gx = valexist(pos.s0 + 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
 	   - valexist(pos.s0 - 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
 
@@ -75,99 +75,6 @@ float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon
 	   - valexist(pos.s0, pos.s1, pos.s2 - 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);		  
 	
 	return fast_normalize((float4)(Gx/2.0f,Gy/2.0f,Gz/2.0f,0.0f));
-
- */
-
-    float gradientX = 0;
-	float gradientY = 0;
-	float gradientZ = 0;
-
-
-	    gradientX = -1 * volume[((int)pos.s0 - 1 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 - 1 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					-6 * volume[((int)pos.s0 - 1 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 - 1 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 - 1 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-
-					1 * volume[((int)pos.s0 + 1 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					3 * volume[((int)pos.s0 + 1 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					1 * volume[((int)pos.s0 + 1 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					3 * volume[((int)pos.s0 + 1 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					6 * volume[((int)pos.s0 + 1 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					3 * volume[((int)pos.s0 + 1 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					1 * volume[((int)pos.s0 + 1 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					3 * volume[((int)pos.s0 + 1 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					1 * volume[((int)pos.s0 + 1 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)];
-
-		 gradientY = 1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 -1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 -1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 -1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					3  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 -1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 -1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 -1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					1  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 -1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 -1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 -1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-
-					3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					6  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-6 * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					3  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-
-					1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 +1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 +1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 +1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					3  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 +1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 +1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 +1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					1  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 +1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 +1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-1 * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 +1 + 0 + 1) * size + ((int)pos.s2 + 0)];
-
-		gradientZ = -1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 - 1)] +
-					-3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 - 1)] +
-					-1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 - 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 - 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 - 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 - 1)] +
-					1 * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 - 1)] +
-					3  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 - 1)] +
-					1  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 - 1)] +
-
-					-3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					-6 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					-3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-					3  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0)] +
-					0  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0)] +
-					3  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0)] +
-
-					-1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 + 1)] +
-					-3 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 + 1)] +
-					-1 * volume[((int)pos.s0 - 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 + 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 + 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 + 1)] +
-					0  * volume[((int)pos.s0 + 0) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 + 1)] +
-					1 * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 - 1) * size + ((int)pos.s2 + 0 + 1)] +
-					3  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 0) * size + ((int)pos.s2 + 0 + 1)] +
-					1  * volume[((int)pos.s0 + 1) * size * size + ((int)pos.s1 + 0 + 1) * size + ((int)pos.s2 + 0 + 1)];
-
-					gradientX *= 1;
-					gradientY *= -1;
-					gradientZ *= -1;
-
-		return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
 
 }
 

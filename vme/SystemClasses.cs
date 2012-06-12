@@ -50,7 +50,7 @@ namespace vme
         private readonly short[] data;
         private readonly int size_this;
         private readonly OpenCLNet.OpenCLManager manager_this;
-        private OpenCLNet.Mem buffer;
+        public OpenCLNet.Mem buffer;
 
         /* Создает новый объем размера size*size*size */
         public VoxelVolume(int size, OpenCLManager openClManager)
@@ -58,8 +58,14 @@ namespace vme
             data = new short[size * size * size];
             size_this = size;
             manager_this = openClManager;
-
+            
         }
+
+        public Mem ReturnBuffer()
+        {
+            return buffer;
+        }
+         
 
         /* Возвращает значение данных в заданной позиции объема */
         public short GetValue(int x, int y, int z)
@@ -98,13 +104,15 @@ namespace vme
         }
 
         /* возвращает буфер */
-        public unsafe Mem GetBuffer()
+        public unsafe Mem CreateBuffer()
         {
             if (buffer == null)
             {
                 /* указатели в C# используются с fixed (противодействие для GC) */
                 fixed (short* dataptr = data)
+                {
                     buffer = manager_this.Context.CreateBuffer(MemFlags.COPY_HOST_PTR, data.Count() * 2, new IntPtr(dataptr));
+                }
             }
             return buffer;
         }
@@ -114,6 +122,7 @@ namespace vme
         {
             return size_this;
         }      
+
 
 
     }
