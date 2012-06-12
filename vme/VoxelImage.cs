@@ -45,6 +45,7 @@ namespace vme
         public Mem outputBuffer;
         public Mem color_buffer;
         public Mem boundaries;
+        public Mem opacity;
         
 
 
@@ -69,6 +70,7 @@ namespace vme
             outputBuffer = null;
             color_buffer =null;
             boundaries = null;
+            opacity = null;
         }
 
         public void  Draw()
@@ -141,6 +143,16 @@ namespace vme
             return boundaries;
 
         }
+
+        private unsafe Mem GetOpacity() 
+        {
+            fixed (byte* dataptr = form_this.opacity)
+            {
+                opacity = manager.Context.CreateBuffer(MemFlags.COPY_HOST_PTR, form_this.opacity.Count(), new IntPtr(dataptr));
+            }
+            return opacity;
+        }
+
 
          
          
@@ -261,6 +273,7 @@ namespace vme
                         kernel.SetArg(20, form_this.knots_counter);
                         kernel.SetArg(21, Convert.ToInt16(colorMi2.Text));
                         kernel.SetArg(22, Convert.ToInt16(colorMa2.Text));
+                        kernel.SetArg(23, GetOpacity());
 
                   
                         /* Ставит в очередь команду для исполнения kernel на устройстве */
@@ -631,6 +644,7 @@ namespace vme
             vol.ReturnBuffer().Dispose();
             color_buffer.Dispose();
             boundaries.Dispose();
+            opacity.Dispose();
             manager.CQ[0].Dispose();
             kernel.Dispose();
             program.Dispose();

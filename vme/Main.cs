@@ -169,25 +169,30 @@ namespace vme
         {
             int winMin = Convert.ToInt32(winCentre_from_Canvas - 0.5 * winWidth_from_Canvas);
             int winMax = winMin + winWidth_from_Canvas;
+            int winWidth = winWidth_from_Canvas;
+            int winCenter = winCentre_from_Canvas;
 
-            this.Windowing.SetWindowWidthCentre(winMin, winMax, winWidth_from_Canvas, winCentre_from_Canvas, bpp, signedImage);
-            this.ColoredTFobj.SetParametersHistogram(winMin, winMax, winWidth_from_Canvas, winCentre_from_Canvas, bpp, signedImage, histogram);
+            this.Windowing.SetWindowWidthCentre(winMin, winMax, winWidth, winCenter, bpp, signedImage);
+            this.ColoredTFobj.SetParametersHistogram(winMin, winMax, winWidth, winCenter, bpp, signedImage, histogram);
         }
 
         
         public void UpdateFromColoredTF()
         {
             this.ImagePlane.viewcolor = false;
-            EraseHistogramArray();
+            //EraseHistogramArray();
             this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram);
         }
          
 
-        public void UpdateColorFromHistogram()
+        public void UpdateColorFromHistogram(double width_from_coloredTF, double center_from_coloredTF)
         {
+            int width = (int)(width_from_coloredTF);
+            int center = (int)(center_from_coloredTF+short.MinValue);
+
             this.ImagePlane.viewcolor = true;
-            this.ImagePlane.EraseHistogramArray();
-            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram);
+            //this.ImagePlane.EraseHistogramArray();
+            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, width, center, false, this, ref  histogram);
         }
 
         private void MainClose(object sender, FormClosingEventArgs e)

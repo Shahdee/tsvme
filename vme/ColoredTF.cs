@@ -263,6 +263,7 @@ namespace vme
 
             string strMax = "255";
             string strMin = "0";
+            string average = "";
 
             p.X = marginLeft - 5;
             p.Y = marginTop + graphHeight + 2;
@@ -276,12 +277,15 @@ namespace vme
             {
                 strMin = Convert.ToString(winMin + short.MinValue);
                 strMax = Convert.ToString(winMax + short.MinValue);
+                average = Convert.ToString(winCentre + short.MinValue);
             }
 
             // метки на горизонтальных линиях
             gr.DrawString(strMin, f, br, p);
-            p.X = marginLeft + graphWidth - 34;
+            p.X = marginLeft + graphWidth-15;
             gr.DrawString(strMax, f, br, p);
+            p.X = (marginLeft + 1 + graphWidth / 2-15);
+            gr.DrawString(average, f, br, p);
             br.Dispose();
 
             br = new SolidBrush(System.Drawing.Color.RosyBrown);
@@ -542,7 +546,7 @@ namespace vme
                     }
                 }
                 Test();
-                form_this.UpdateColorFromHistogram();
+                form_this.UpdateColorFromHistogram(winWidth, winCentre);
             }
             else
                 MessageBox.Show("Сначала загрузите DICOM файл");

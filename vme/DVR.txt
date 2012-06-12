@@ -369,7 +369,8 @@ kernel void DVR(
 			global short* boundaries,
 			int knots,
 			short winMin2,
-	 	    short winMax2
+	 	    short winMax2,
+			global uchar* opacity
 			) 
 {
 	// берем глобальный идентификатор work_item'a

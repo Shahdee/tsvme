@@ -32,7 +32,8 @@
 	.param .u32 .ptr .global .align 2 DVR_param_19,
 	.param .u32 DVR_param_20,
 	.param .u16 DVR_param_21,
-	.param .u16 DVR_param_22
+	.param .u16 DVR_param_22,
+	.param .u32 .ptr .global .align 1 DVR_param_23
 )
 {
 	.reg .f32 	%f<850>;
