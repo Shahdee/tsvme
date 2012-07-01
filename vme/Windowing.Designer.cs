@@ -39,11 +39,11 @@
             // 
             this.label4.AutoSize = true;
             this.label4.BackColor = System.Drawing.SystemColors.Control;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.Color.Green;
+            this.label4.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label4.ForeColor = System.Drawing.Color.OliveDrab;
             this.label4.Location = new System.Drawing.Point(181, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(116, 13);
+            this.label4.Size = new System.Drawing.Size(128, 16);
             this.label4.TabIndex = 5;
             this.label4.Text = "Область интереса";
             // 
@@ -52,36 +52,36 @@
             this.text_max.AutoSize = true;
             this.text_max.Location = new System.Drawing.Point(380, 84);
             this.text_max.Name = "text_max";
-            this.text_max.Size = new System.Drawing.Size(43, 13);
+            this.text_max.Size = new System.Drawing.Size(37, 13);
             this.text_max.TabIndex = 15;
-            this.text_max.Text = "winMax";
+            this.text_max.Text = "Макс.";
             // 
             // text_centre
             // 
             this.text_centre.AutoSize = true;
             this.text_centre.Location = new System.Drawing.Point(380, 57);
             this.text_centre.Name = "text_centre";
-            this.text_centre.Size = new System.Drawing.Size(54, 13);
+            this.text_centre.Size = new System.Drawing.Size(38, 13);
             this.text_centre.TabIndex = 14;
-            this.text_centre.Text = "winCentre";
+            this.text_centre.Text = "Центр";
             // 
             // text_min
             // 
             this.text_min.AutoSize = true;
             this.text_min.Location = new System.Drawing.Point(380, 113);
             this.text_min.Name = "text_min";
-            this.text_min.Size = new System.Drawing.Size(40, 13);
+            this.text_min.Size = new System.Drawing.Size(31, 13);
             this.text_min.TabIndex = 13;
-            this.text_min.Text = "winMin";
+            this.text_min.Text = "Мин.";
             // 
             // text_width
             // 
             this.text_width.AutoSize = true;
             this.text_width.Location = new System.Drawing.Point(380, 30);
             this.text_width.Name = "text_width";
-            this.text_width.Size = new System.Drawing.Size(51, 13);
+            this.text_width.Size = new System.Drawing.Size(46, 13);
             this.text_width.TabIndex = 12;
-            this.text_width.Text = "winWidth";
+            this.text_width.Text = "Ширина";
             // 
             // Windowing
             // 

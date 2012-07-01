@@ -127,6 +127,12 @@ namespace vme
 
     }
 
+    public struct InkPoint 
+    {
+        public int x;
+        public int y;
+    }
+
     public static class MathClass
     {
        

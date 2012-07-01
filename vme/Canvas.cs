@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 
@@ -51,6 +52,8 @@ namespace vme
         int sizeImg;
         int sizeImg3;
 
+        Color pixelColor;
+        Color fillColor;
         Main mf;
 
         Imagebpp bpp;
@@ -79,6 +82,8 @@ namespace vme
             lut16 = new byte[65536];
 
             viewcolor = false;
+            pixelColor = Color.Empty;
+            fillColor = Color.Empty;
 
             PerformResize();
 
@@ -124,8 +129,8 @@ namespace vme
             uint res24;
             uint res16;
 
-            uint two_in_24_max = (1 << 24) - 1; // max 
-            ushort two_in_16_max = (1 << 16) - 1; // max 
+            uint two_in_24_max = (1 << 24) - 1; 
+            ushort two_in_16_max = (1 << 16) - 1; 
 
             if (color > two_in_24_max)
             {
@@ -168,9 +173,11 @@ namespace vme
                 R = 0;
                 row[j1 + 2] = R;
                 A = (byte)(color);
+                row[j1 + 3] = A;
                 return;
             }
             A = (byte)color;
+            row[j1 + 3] = A;
             return;
 
 
@@ -178,7 +185,7 @@ namespace vme
 
         /*для глубины  bpp=8*/
         public void SetParameters(ref List<byte> arr, int wid, int hei, double windowWidth,
-            double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm, long[] hi)
+            double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm, long[] hi, Color inkColor)
         {
             if (samplesPerPixel == 1)
             {
@@ -200,6 +207,7 @@ namespace vme
                 if (bmp != null)
                     bmp.Dispose();
                 ResetValues();
+                fillColor = inkColor; 
                 ComputeLookUpTable8();
                 bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 CreateImage8();
@@ -211,7 +219,7 @@ namespace vme
 
 
         public void SetParameters(ref List<ushort> arr,double intercept, int wid, int hei, double windowWidth,   // arr ushort
-            double windowCentre, bool resetScroll, Main mainFrm, ref long[] hi)
+            double windowCentre, bool resetScroll, Main mainFrm, ref long[] hi, Color inkColor)
         {
             bpp = Imagebpp.Sixteenbpp;
             imgWidth = wid;
@@ -249,9 +257,9 @@ namespace vme
             if (bmp != null)
                 bmp.Dispose();
             ResetValues();
-
+            fillColor = inkColor; 
             ComputeLookUpTable16();
-            bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             CreateImage16();
             if (resetScroll == true) ComputeScrollBarParameters();
             Invalidate();
@@ -262,11 +270,9 @@ namespace vme
             BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, imgWidth, imgHeight),
                System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
 
-            Color c;
-            
             unsafe
             {
-                int pixelSize = 3;
+                int pixelSize = 4;
                 int i, j, j1, i1;
                 byte b;
 
@@ -286,14 +292,17 @@ namespace vme
                             
                             j1 = j * pixelSize;
 
-                            UIntToColor(mf.colored_array[b],ref row, j1);
+                            UIntToColor(mf.colors[b],ref row, j1);
+                          
                         }
                         else 
                         {   
+                                                      
                             j1 = j * pixelSize;
                             row[j1] = b;
                             row[j1 + 1] = b;
                             row[j1 + 2] = b;
+                            row[j1 + 3] = 255; 
                         }
                     }
                     
@@ -481,8 +490,99 @@ namespace vme
                 histogram[i] = 0;
         }
 
+        private void SetPixel() 
+        {
+            
+        }
 
-       
+        private void InkArea(MouseEventArgs e) 
+        {
+            InkPoint[] arr = new InkPoint[1000];
+            InkPoint[] newarr = new InkPoint[1000];
+            int length = 1;
+            int newlength = 1;
+            pixelColor = Color.Empty;
+
+            arr[0].x = e.X;
+            arr[0].y = e.Y;
+
+            bmp.SetPixel(arr[0].x, arr[0].y, mf.inkColor);
+            
+            while (newlength != 0)
+            {
+                newlength = 0;
+                for (int i = 0; i < length; i++)
+                {
+                    if (arr[i].x < bmp.Width-1)
+                    {
+                        pixelColor = bmp.GetPixel(arr[i].x + 1, arr[i].y);
+                        if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
+                        {
+                            bmp.SetPixel(arr[i].x + 1, arr[i].y, mf.inkColor);
+                            newarr[newlength].x = arr[i].x + 1;
+                            newarr[newlength].y = arr[i].y;
+                            newlength++;
+                        }
+                    }
+
+                    if (arr[i].x > 0)
+                    {
+                        pixelColor = bmp.GetPixel(arr[i].x - 1, arr[i].y);
+                        if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
+                        {
+                            bmp.SetPixel(arr[i].x - 1, arr[i].y, mf.inkColor);
+                            newarr[newlength].x = arr[i].x - 1;
+                            newarr[newlength].y = arr[i].y;
+                            newlength++;
+                        }
+                    }
+
+                    if (arr[i].y < bmp.Height-1)
+                    {
+                        pixelColor = bmp.GetPixel(arr[i].x, arr[i].y+1);
+                        if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
+                        {
+                            bmp.SetPixel(arr[i].x, arr[i].y + 1, mf.inkColor);
+                            newarr[newlength].x = arr[i].x;
+                            newarr[newlength].y = arr[i].y + 1;
+                            newlength++;
+                        }
+                    }
+
+                    if (arr[i].y > 0)
+                    {
+                        pixelColor = bmp.GetPixel(arr[i].x, arr[i].y - 1);
+                        if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
+                        {
+                            bmp.SetPixel(arr[i].x, arr[i].y - 1, mf.inkColor);
+                            newarr[newlength].x = arr[i].x;
+                            newarr[newlength].y = arr[i].y - 1;
+                            newlength++;
+                        }
+                    }
+                }
+                for (int i = 0; i < newlength; i++)
+                {
+                    arr[i].x = newarr[i].x;
+                    arr[i].y = newarr[i].y;
+                }
+                length = newlength;
+            
+            }
+             
+        }
+
+        private void surface_MouseClick(object sender, MouseEventArgs e)
+        {
+            
+                if (e.Button == MouseButtons.Left) 
+                {
+                    InkArea(e);// алгоритм закраски
+                }
+                UpdateMainForm();
+                Invalidate();
+        }
+
         private void Surface_MouseDown(object sender, MouseEventArgs e)
         {
             if (imageAvailable == true)
@@ -494,6 +594,7 @@ namespace vme
                     rightMouseDown = true;
                     Cursor = Cursors.Hand;
                 }
+
             }
         }
 

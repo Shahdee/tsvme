@@ -277,13 +277,14 @@ namespace vme
                 winMaxToDisplay += short.MinValue;
             }
 
-            text_width.Text = "Width=" + winWidth.ToString();
-            text_centre.Text = "Level=" + winCentreToDisplay.ToString();
-            text_min.Text = "Win Min = " + winMinToDisplay.ToString();
-            text_max.Text = "Win Max = " + winMaxToDisplay.ToString();
+            text_width.Text = "Ширина=" + winWidth.ToString();
+            text_centre.Text = "Центр=" + winCentreToDisplay.ToString();
+            text_min.Text = "Мин. = " + winMinToDisplay.ToString();
+            text_max.Text = "Макс. = " + winMaxToDisplay.ToString();
 
             e.Graphics.DrawImageUnscaled(bmp, 0, 0);
             gr.Dispose();
         }
+
     }
 }
