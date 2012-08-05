@@ -359,7 +359,7 @@ float4 TraceRayandGetPixelColor
 	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
 	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &kmin,&kmax) )
 	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
+		return (float4)(0.0f,0.0f,0.0f,1.0f);
 	}
 
 	const float step=5;
@@ -396,7 +396,7 @@ float4 TraceRayandGetPixelColor
 		
 	}
 	
-	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+	return (float4)(0.0f,0.0f,0.0f,1.0f);  // GBRA
 }
 
 

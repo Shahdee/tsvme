@@ -53,27 +53,27 @@
             this.coloredTF_text.ForeColor = System.Drawing.Color.OliveDrab;
             this.coloredTF_text.Location = new System.Drawing.Point(143, 10);
             this.coloredTF_text.Name = "coloredTF_text";
-            this.coloredTF_text.Size = new System.Drawing.Size(252, 16);
+            this.coloredTF_text.Size = new System.Drawing.Size(190, 16);
             this.coloredTF_text.TabIndex = 6;
-            this.coloredTF_text.Text = "Гистограмма/Передаточная функция";
+            this.coloredTF_text.Text = "Histogram / Transfer function";
             // 
             // Color
             // 
-            this.Color.Location = new System.Drawing.Point(570, 3);
+            this.Color.Location = new System.Drawing.Point(560, 3);
             this.Color.Name = "Color";
-            this.Color.Size = new System.Drawing.Size(47, 35);
+            this.Color.Size = new System.Drawing.Size(57, 35);
             this.Color.TabIndex = 16;
-            this.Color.Text = "Цвет";
+            this.Color.Text = "Color";
             this.Color.UseVisualStyleBackColor = true;
             this.Color.Click += new System.EventHandler(this.Color_Click);
             // 
             // reset_fn
             // 
-            this.reset_fn.Location = new System.Drawing.Point(517, 3);
+            this.reset_fn.Location = new System.Drawing.Point(497, 3);
             this.reset_fn.Name = "reset_fn";
-            this.reset_fn.Size = new System.Drawing.Size(47, 35);
+            this.reset_fn.Size = new System.Drawing.Size(57, 35);
             this.reset_fn.TabIndex = 15;
-            this.reset_fn.Text = "По умолч. функция";
+            this.reset_fn.Text = "default";
             this.reset_fn.UseVisualStyleBackColor = true;
             this.reset_fn.Click += new System.EventHandler(this.reset_fn_Click);
             // 
@@ -83,11 +83,11 @@
             // 
             // Apply
             // 
-            this.Apply.Location = new System.Drawing.Point(570, 44);
+            this.Apply.Location = new System.Drawing.Point(560, 44);
             this.Apply.Name = "Apply";
-            this.Apply.Size = new System.Drawing.Size(47, 35);
+            this.Apply.Size = new System.Drawing.Size(57, 35);
             this.Apply.TabIndex = 17;
-            this.Apply.Text = "Прим.";
+            this.Apply.Text = "Accept";
             this.Apply.UseVisualStyleBackColor = true;
             this.Apply.Click += new System.EventHandler(this.Apply_Click);
             // 
@@ -109,9 +109,9 @@
             this.active.AutoSize = true;
             this.active.Location = new System.Drawing.Point(479, 173);
             this.active.Name = "active";
-            this.active.Size = new System.Drawing.Size(62, 13);
+            this.active.Size = new System.Drawing.Size(50, 13);
             this.active.TabIndex = 20;
-            this.active.Text = "Неактивно";
+            this.active.Text = "Unactive";
             // 
             // cordX
             // 
@@ -172,9 +172,9 @@
             this.preset_text.AutoSize = true;
             this.preset_text.Location = new System.Drawing.Point(470, 105);
             this.preset_text.Name = "preset_text";
-            this.preset_text.Size = new System.Drawing.Size(84, 13);
+            this.preset_text.Size = new System.Drawing.Size(57, 13);
             this.preset_text.TabIndex = 27;
-            this.preset_text.Text = "Предуст. пар-ы";
+            this.preset_text.Text = "Default TF";
             // 
             // opacity
             // 

@@ -69,7 +69,7 @@ namespace vme
             inkColor = Color.Red;
         }
 
-        private void Open_Click(object sender, EventArgs e)
+        private void openDicom_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
 
@@ -243,57 +243,6 @@ namespace vme
                 MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров!");
         }
 
-        private void volume_Click(object sender, EventArgs e)
-        {
-            vform = new VoxelImage();
-            vform.VoxelImage_Load(pixels_volume, num_of_images, winCentre, winWidth, dec.rescaleIntercept, dec.signedImage, this);
-            vform.Idle();
-            vform.Show();
-        }
-
-        private void TestDataSet_Click(object sender, EventArgs e)
-        {
-            path = "D:\\tsvme\\DICOM images\\my\\";
-         
-            for (int i = 1; i < 167; i++)
-            {
-                
-                safename ="_"+Convert.ToString(i);
-                pixels16.Clear();
-                pixels8.Clear();
-                dec.EraseFields();
-                ImagePlane.EraseFields();
-                Cursor = Cursors.WaitCursor;
-                ReadAndDisplayDicomFile(path+safename, safename);
-                Cursor = Cursors.Default;
-                image_label.Text = path + safename;
-                num_of_images++;
-            }
-            image_number = num_of_images;
-        }
-
-
-        private void test_head_Click(object sender, EventArgs e)
-        {
-            path = "D:\\tsvme\\DICOM images\\kid\\";
-
-            for (int i = 30; i < 190; i++)
-            {
-
-                safename = "_" + Convert.ToString(i);
-                pixels16.Clear();
-                pixels8.Clear();
-                dec.EraseFields();
-                ImagePlane.EraseFields();
-                Cursor = Cursors.WaitCursor;
-                ReadAndDisplayDicomFile(path + safename, safename);
-                Cursor = Cursors.Default;
-                image_label.Text = path + safename;
-                num_of_images++;
-            }
-            image_number = num_of_images;
-        }
-
         private void backward_Click(object sender, EventArgs e)
         {
             if (image_number>1)
@@ -334,7 +283,60 @@ namespace vme
                 inkColor = inkDialog.Color;
             }
         }
-          
+
+        private void openChest_Click(object sender, EventArgs e)
+        {
+            path = "D:\\tsvme\\DICOM images\\my\\";
+
+            for (int i = 1; i < 167; i++)
+            {
+
+                safename = "_" + Convert.ToString(i);
+                pixels16.Clear();
+                pixels8.Clear();
+                dec.EraseFields();
+                ImagePlane.EraseFields();
+                Cursor = Cursors.WaitCursor;
+                ReadAndDisplayDicomFile(path + safename, safename);
+                Cursor = Cursors.Default;
+                image_label.Text = path + safename;
+                num_of_images++;
+            }
+            image_number = num_of_images;
+        }
+
+        private void openKid_Click(object sender, EventArgs e)
+        {
+            path = "D:\\tsvme\\DICOM images\\kid\\";
+
+            for (int i = 30; i < 190; i++)
+            {
+
+                safename = "_" + Convert.ToString(i);
+                pixels16.Clear();
+                pixels8.Clear();
+                dec.EraseFields();
+                ImagePlane.EraseFields();
+                Cursor = Cursors.WaitCursor;
+                ReadAndDisplayDicomFile(path + safename, safename);
+                Cursor = Cursors.Default;
+                image_label.Text = path + safename;
+                num_of_images++;
+            }
+            image_number = num_of_images;
+        }
+
+        private void volumeReconstruction_Click(object sender, EventArgs e)
+        {
+            vform = new VoxelImage();
+            vform.VoxelImage_Load(pixels_volume, num_of_images, winCentre, winWidth, dec.rescaleIntercept, dec.signedImage, this);
+            vform.Idle();
+            vform.Show();
+        }
+
+       
+
+
     }
 }
 
