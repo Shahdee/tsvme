@@ -9,57 +9,56 @@ namespace vme
 {
     public partial class Canvas : UserControl
     {
-    
-        List<byte> pix8;
-        List<ushort> pix16;
-        long[] histogram;
-        Bitmap bmp;
+        private List<byte> pix8;
+        private List<ushort> pix16;
+        private long[] histogram;
+        private Bitmap bmp;
 
-        int hOffset;
-        int vOffset;
-        int hMax;
-        int vMax;
-        int imgWidth;
-        int imgHeight;
-        int panWidth;
-        int panHeight;
-        bool newImage;
-        public bool viewcolor;
+        private int hOffset;
+        private int vOffset;
+        private int hMax;
+        private int vMax;
+        private int imgWidth;
+        private int imgHeight;
+        private int panWidth;
+        private int panHeight;
+        private bool newImage;
+        private bool viewcolor;
 
-        int winMin;
-        int winMax;
+        private int winMin;
+        private int winMax;
 
-        int winCentre;
-        int winWidth;
+        private int winCentre;
+        private int winWidth;
 
-        int winShr1;
-        int deltaX;
-        int deltaY;
+        private int winShr1;
+        private int deltaX;
+        private int deltaY;
 
-        Point ptWLDown;
-        double changeValWidth;
-        double changeValCentre;
-        bool rightMouseDown;
-        bool imageAvailable;
-        bool signed16Image;
+        private Point ptWLDown;
+        private double changeValWidth;
+        private double changeValCentre;
+        private bool rightMouseDown;
+        private bool imageAvailable;
+        private bool signed16Image;
 
-        byte[] lut8;
-        byte[] lut16;
+        private byte[] lut8;
+        private byte[] lut16;
 
-        byte[] imagePixels8;
-        byte[] imagePixels16;
+        private byte[] imagePixels8;
+        private byte[] imagePixels16;
 
-        int sizeImg;
-        int sizeImg3;
+        private int sizeImg;
+        private int sizeImg3;
 
-        Color pixelColor;
-        Color fillColor;
+        private Color pixelColor;
+        private Color fillColor;
+        
         Main mf;
 
         Imagebpp bpp;
 
-        public Canvas()
-        {
+        public Canvas(){
             InitializeComponent();
             
             pix8 = new List<byte>();
@@ -86,11 +85,9 @@ namespace vme
             fillColor = Color.Empty;
 
             PerformResize();
-
         }
 
-        public void EraseFields() 
-        {
+        public void EraseFields(){
             pix8.Clear();
             pix16.Clear();
             winMin = 0;
@@ -103,27 +100,21 @@ namespace vme
             viewcolor = false;
         }
 
-        public bool NewImage
-        {
-            set
-            {
-                newImage = value;
-            }
+        public bool NewImage{
+            get { return newImage; }
+            private set{newImage = value;}
         }
 
-        public bool Signed16Image
-        {
-            set { signed16Image = value; }
+        public bool Signed16Image{
+            get { return signed16Image; }
+            private set { signed16Image = value; }
         }
 
-        unsafe private void UIntToColor(uint color, ref byte* row, int j1)
-        {
-
+        unsafe private void UIntToColor(uint color, ref byte* row, int j1){
             byte G;
             byte B;
             byte R;
             byte A;
-
             uint colorX;
             uint res32;
             uint res24;
@@ -132,44 +123,37 @@ namespace vme
             uint two_in_24_max = (1 << 24) - 1; 
             ushort two_in_16_max = (1 << 16) - 1; 
 
-            if (color > two_in_24_max)
-            {
+            if (color > two_in_24_max){
 
-                G = (byte)(color >> 24); // res24
+                G = (byte)(color >> 24);
                 row[j1 + 1] = G;
                 colorX = color >> 24;
                 res32 = colorX << 24;
                 color -= res32;
-
             }
-            else
-            {
+            else{
                 G = 0;
                 row[j1 + 1] = G;
             }
-            if (color > two_in_16_max)
-            {
+            if (color > two_in_16_max){
                 B = (byte)(color >> 16);
                 row[j1] = B;
                 colorX = color >> 16;
                 res24 = colorX << 16;
                 color -= res24;
             }
-            else
-            {
+            else{
                 B = 0;
                 row[j1] = B;
             }
-            if (color > 255)
-            {
+            if (color > 255){
                 R = (byte)(color >> 8);
                 row[j1 + 2] = R;
                 colorX = color >> 8;
                 res16 = colorX << 8;
                 color -= res16;
             }
-            else
-            {
+            else{
                 R = 0;
                 row[j1 + 2] = R;
                 A = (byte)(color);
@@ -179,8 +163,6 @@ namespace vme
             A = (byte)color;
             row[j1 + 3] = A;
             return;
-
-
         }
 
         /*для глубины  bpp=8*/
@@ -216,7 +198,6 @@ namespace vme
             if (resetScroll == true) ComputeScrollBarParameters();
             Invalidate();
         }
-
 
         public void SetParameters(ref List<ushort> arr,double intercept, int wid, int hei, double windowWidth,   // arr ushort
             double windowCentre, bool resetScroll, Main mainFrm, ref long[] hi, Color inkColor)
@@ -313,7 +294,7 @@ namespace vme
         }
 
         /* работает и для ushort и для short, хотя работаю я здесь только с ushort */
-        private void ComputeLookUpTable16()
+        public void ComputeLookUpTable16()
         {
             int range = winMax - winMin;
             if (range < 1) range = 1;
@@ -334,7 +315,7 @@ namespace vme
             }
         }
 
-        private void ComputeLookUpTable8()
+        public void ComputeLookUpTable8()
         {
             if (winMax == 0)
                 winMax = 255;
@@ -356,7 +337,7 @@ namespace vme
             }
         }
 
-        private void CreateImage8()
+        public void CreateImage8()
         {
             BitmapData bmd = bmp.LockBits(new Rectangle(0, 0, imgWidth, imgHeight),
                 System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
@@ -387,7 +368,7 @@ namespace vme
             bmp.UnlockBits(bmd);
         }
 
-        private void ComputeScrollBarParameters()
+        public void ComputeScrollBarParameters()
         {
             panWidth = surface.Width;
             panHeight = surface.Height;
@@ -416,21 +397,21 @@ namespace vme
             }
         }
 
-        private void vScrollBar_Scroll(object sender, ScrollEventArgs e)
+        public void vScrollBar_Scroll(object sender, ScrollEventArgs e)
         {
             int val = vScrollBar.Value;
             vOffset = (panHeight - imgHeight) * (val - vScrollBar.Minimum) / (vMax - vScrollBar.Minimum);
             Invalidate();
         }
 
-        private void hScrollBar_Scroll(object sender, ScrollEventArgs e)
+        public void hScrollBar_Scroll(object sender, ScrollEventArgs e)
         {
             int val = hScrollBar.Value;
             hOffset = (panWidth - imgWidth) * (val - hScrollBar.Minimum) / (hMax - hScrollBar.Minimum);
             Invalidate();
         }
 
-        private void Canvas_Paint(object sender, PaintEventArgs e)
+        public void Canvas_Paint(object sender, PaintEventArgs e)
         {
             if (bpp == Imagebpp.Eightbpp)
             {
@@ -469,34 +450,28 @@ namespace vme
 
         }
 
-        private void UpdateMainForm()
-        {
+        public void UpdateMainForm(){
             mf.UpdateWindowLevel(winWidth, winCentre, bpp, histogram);
 
         }
 
-        public void ResetValues()
-        {
-
+        public void ResetValues(){
             winMax = Convert.ToInt32(winCentre + 0.5 * winWidth);
             winMin = winMax - winWidth;
-           
             UpdateMainForm();
         }
 
-        public void EraseHistogramArray()
-        {
+        public void EraseHistogramArray(){
             for (int i = 0; i < 256; i++)
                 histogram[i] = 0;
         }
 
-        private void SetPixel() 
+        public void SetPixel()
         {
             
         }
 
-        private void InkArea(MouseEventArgs e) 
-        {
+        public void InkArea(MouseEventArgs e){
             InkPoint[] arr = new InkPoint[1000];
             InkPoint[] newarr = new InkPoint[1000];
             int length = 1;
@@ -572,8 +547,7 @@ namespace vme
              
         }
 
-        private void surface_MouseClick(object sender, MouseEventArgs e)
-        {
+        public void surface_MouseClick(object sender, MouseEventArgs e){
             
                 if (e.Button == MouseButtons.Left) 
                 {
@@ -583,12 +557,10 @@ namespace vme
                 Invalidate();
         }
 
-        private void Surface_MouseDown(object sender, MouseEventArgs e)
+        public void Surface_MouseDown(object sender, MouseEventArgs e)
         {
-            if (imageAvailable == true)
-            {
-                if (e.Button == MouseButtons.Right)
-                {
+            if (imageAvailable == true){
+                if (e.Button == MouseButtons.Right){
                     ptWLDown.X = e.X;
                     ptWLDown.Y = e.Y;
                     rightMouseDown = true;
@@ -598,7 +570,7 @@ namespace vme
             }
         }
 
-        private void Surface_MouseUp(object sender, MouseEventArgs e)
+        public void Surface_MouseUp(object sender, MouseEventArgs e)
         {
             if (rightMouseDown == true)
             {
@@ -607,10 +579,8 @@ namespace vme
             }
         }
 
-        private void Surface_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (rightMouseDown == true)
-            {
+        public void Surface_MouseMove(object sender, MouseEventArgs e){
+            if (rightMouseDown == true){
                 winShr1 = winWidth >> 1;
                 winWidth = winMax - winMin;
                 winCentre = winMin + winShr1;
@@ -633,13 +603,11 @@ namespace vme
                 ptWLDown.Y = e.Y;
 
                 EraseHistogramArray();
-                if (bpp == Imagebpp.Eightbpp)
-                {
+                if (bpp == Imagebpp.Eightbpp){
                     ComputeLookUpTable8();
                     CreateImage8();
                 }
-                else if (bpp == Imagebpp.Sixteenbpp)
-                {
+                else if (bpp == Imagebpp.Sixteenbpp){
                     ComputeLookUpTable16();
                     CreateImage16(); //  здесь  расчитывается также гистограмма изображения
                 }
@@ -648,13 +616,11 @@ namespace vme
             }
         }
 
-        private void Canvas_Resize(object sender, EventArgs e)
-        {
+        public void Canvas_Resize(object sender, EventArgs e){
             PerformResize();
         }
 
-        private void PerformResize()
-        {
+        public void PerformResize(){
             surface.Location = new Point(3, 3);
             surface.Width = ClientRectangle.Width - 24;
             surface.Height = ClientRectangle.Height - 24;

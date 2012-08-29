@@ -45,6 +45,10 @@
             this.ColoredTFobj = new vme.ColoredTF();
             this.Windowing = new vme.Windowing();
             this.ImagePlane = new vme.Canvas();
+            this.newFormToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.float1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.float2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.float3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -115,7 +119,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1,
             this.editToolStripMenuItem,
-            this.volumeReconstruction});
+            this.volumeReconstruction,
+            this.newFormToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1213, 24);
@@ -192,6 +197,35 @@
             this.ImagePlane.Size = new System.Drawing.Size(539, 539);
             this.ImagePlane.TabIndex = 1;
             // 
+            // newFormToolStripMenuItem
+            // 
+            this.newFormToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.float1ToolStripMenuItem,
+            this.float2ToolStripMenuItem,
+            this.float3ToolStripMenuItem});
+            this.newFormToolStripMenuItem.Name = "newFormToolStripMenuItem";
+            this.newFormToolStripMenuItem.Size = new System.Drawing.Size(74, 20);
+            this.newFormToolStripMenuItem.Text = "New Form";
+            this.newFormToolStripMenuItem.Click += new System.EventHandler(this.newFormToolStripMenuItem_Click);
+            // 
+            // float1ToolStripMenuItem
+            // 
+            this.float1ToolStripMenuItem.Name = "float1ToolStripMenuItem";
+            this.float1ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.float1ToolStripMenuItem.Text = "Float1";
+            // 
+            // float2ToolStripMenuItem
+            // 
+            this.float2ToolStripMenuItem.Name = "float2ToolStripMenuItem";
+            this.float2ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.float2ToolStripMenuItem.Text = "Float2";
+            // 
+            // float3ToolStripMenuItem
+            // 
+            this.float3ToolStripMenuItem.Name = "float3ToolStripMenuItem";
+            this.float3ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.float3ToolStripMenuItem.Text = "Float3";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -240,6 +274,10 @@
         private System.Windows.Forms.ToolStripMenuItem openKid;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem volumeReconstruction;
+        private System.Windows.Forms.ToolStripMenuItem newFormToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem float1ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem float2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem float3ToolStripMenuItem;
         
     }
 }

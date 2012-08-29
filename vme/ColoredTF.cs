@@ -14,21 +14,21 @@ using OpenCLNet;
 
 namespace vme
 {
-    public partial class ColoredTF : UserControl
+    public class ColoredTF : UserControl
     {
-        int marginLeft;
-        int marginRight;
-        int marginTop;
-        int marginBottom;
-        int graphWidth;
-        int graphHeight;
+        private int marginLeft;
+        private int marginRight;
+        private int marginTop;
+        private int marginBottom;
+        private int graphWidth;
+        private int graphHeight;
 
-        int winWidth;
-        int winCentre;
-        int winMin;
-        int winMax;
+        private int winWidth;
+        private int winCentre;
+        private int winMin;
+        private int winMax;
 
-        Main form_this;
+        Main form_this; // ?
 
         private Knot pp;
         private Knot active_point;
@@ -40,12 +40,11 @@ namespace vme
         long[] histogram_255;
         Imagebpp iBpp;
 
-        bool signedImage;
-        bool first;
-        bool paint_histogram;
+        private bool signedImage;
+        private bool first;
+        private bool paint_histogram;
 
-        public ColoredTF()
-        {
+        public ColoredTF(){
             InitializeComponent();
             DoubleBuffered = true;
             marginLeft = 182;
@@ -71,13 +70,11 @@ namespace vme
            
         }
 
-        public void PassAlong(Main form)
-        {
+        public void PassAlong(Main form){
             form_this = form;
         }
 
-        public void SetParametersHistogram(int minVal, int maxVal, int widthVal, int centreVal, Imagebpp bpp, bool sign, long[] histogram)
-        {
+        public void SetParametersHistogram(int minVal, int maxVal, int widthVal, int centreVal, Imagebpp bpp, bool sign, long[] histogram){
 
             winMin = minVal;
             winMax = maxVal;
@@ -104,7 +101,7 @@ namespace vme
             active_number = 0;
             is_active_global = false;
 
-            this.active.Text = "Неактивно";
+            this.active.Text = "Unactive";
             this.cordX.Text = "x: ";
             this.cordY.Text = "y: ";
             this.red.Text = "R ";
@@ -119,8 +116,7 @@ namespace vme
 
         #region ColorMix
     
-        private uint ColorBytesToUInt(byte b3, byte b2, byte b1, byte b0)
-        {
+        private uint ColorBytesToUInt(byte b3, byte b2, byte b1, byte b0){
             return (uint)((b3 << 24) + (b2 << 16) + (b1 << 8) + b0);
         }
 
@@ -134,55 +130,44 @@ namespace vme
             return (uint)((gu << 24) + (bu << 16) + (ru << 8) + au);
         }
 
-        private Float4 UIntToColor(uint color)
-        {
+        private Float4 UIntToColor(uint color){
             byte G;
             byte B;
             byte R;
             byte A;
-
             Float4 Color;
-
             uint colorX;
             uint res32;
             uint res24;
             uint res16;
-            
             uint two_in_24_max = (1 << 24) -1; // max 
             ushort two_in_16_max = (1 << 16)-1; // max 
             
-            if (color > two_in_24_max)
-            {
-                G = (byte)(color >> 24); // res24
+            if (color > two_in_24_max){
+                G = (byte)(color >> 24);
                 colorX = color >> 24;
                 res32 = colorX << 24;
                 color -= res32;
-
             }
-            else 
-            {
+            else{
                 G = 0;
             }
-            if (color > two_in_16_max)
-            {
+            if (color > two_in_16_max){
                 B = (byte)(color>>16);
                 colorX = color >> 16;
                 res24 = colorX << 16;
                 color -= res24;
             }
-            else 
-            {
+            else{
                 B = 0;
             }
-            if (color > 255)
-            {
+            if (color > 255){
                 R =(byte)(color>>8);
                 colorX = color >> 8;
                 res16 = colorX << 8;
                 color -= res16;
             }
-            else
-            {
+            else{
                 R = 0;
                 A = (byte)(color);
                 Color.S0 = G;
@@ -197,13 +182,8 @@ namespace vme
             Color.S2 = R;
             Color.S3 = A;
             return Color;
-           
-           
         }
-
         #endregion
-
-       
 
         #region Grid
         /*метод рисует границы и сетку*/
@@ -328,7 +308,7 @@ namespace vme
         #endregion
 
         /* Отрисовка линий между контрольными точками */
-        private void DrawLine(Graphics g)
+        public void DrawLine(Graphics g)
         {
             Pen pn = new Pen(System.Drawing.Color.Chocolate);
             if (knots.Count > 1)
@@ -339,7 +319,7 @@ namespace vme
             pn.Dispose();
         }
 
-        private void DrawColorInterpolation(Knot p1, Knot p2, Graphics gg)
+        public void DrawColorInterpolation(Knot p1, Knot p2, Graphics gg)
         {
             byte a, r, g, b;
             float area;
@@ -370,7 +350,7 @@ namespace vme
         }
 
         /* Отрисовка массива точек */
-        private void DrawKnotsArray(Graphics g)
+        public void DrawKnotsArray(Graphics g)
         {
             Knot p1;
             Knot p2;
@@ -388,7 +368,7 @@ namespace vme
         }
 
         /* Отрисовка 1 точки */
-        private void DrawPoint(Graphics g, Knot j)
+        public void DrawPoint(Graphics g, Knot j)
         {
             Pen pn = new Pen(j.c);
             SolidBrush brush = new SolidBrush(j.c);
@@ -399,12 +379,59 @@ namespace vme
             pn.Dispose();
         }
 
-        void UpdMainForm()
+        public void Apply_Click(object sender, EventArgs e)
+        {
+            byte a=0, r=0, g=0, b=0;
+            float factor;
+            float step = 0;
+            int overall;
+            float delta = (float)(this.Width-marginLeft-marginRight)/(float)(256);
+            int resized_dx=0;
+
+            if (form_this != null && !is_active_global)
+            {
+                form_this.knots_counter = knots.Count;
+                EraseArrays();
+
+                                
+                for (int i = 0; i < knots.Count-1 ; i++)
+                {
+                    step = 0;
+                    for (int dx = knots[i].p.X; dx < knots[i + 1].p.X; dx++)
+                    {
+                        resized_dx = dx - (marginLeft + 1); // отн нуля
+                        overall = knots[i+1].p.X - knots[i].p.X; // отрезок между соседними точками
+                        factor = (float)(step) / (float)(overall); 
+
+                        a = (byte)(knots[i].c.A + (knots[i + 1].c.A - knots[i].c.A) * factor);
+                        r = (byte)(knots[i].c.R + (knots[i + 1].c.R - knots[i].c.R) * factor);
+                        g = (byte)(knots[i].c.G + (knots[i + 1].c.G - knots[i].c.G) * factor);
+                        b = (byte)(knots[i].c.B + (knots[i + 1].c.B - knots[i].c.B) * factor);
+
+                        form_this.colors[resized_dx] = ColorBytesToUInt(g, b, r, a);
+                        form_this.opacity[resized_dx] = TransformationPy(knots[i], knots[i + 1], resized_dx);
+
+                        step++;
+                    }
+                }
+                if (resized_dx != 255) // Придаем цвет тем точкам, которые находятся правее передаточной функции, то есть им по каким-либо причинам не был присвоен цвет
+                {
+                    for (int dx = resized_dx; dx < 256; dx++)
+                    {
+                        form_this.colors[dx] = ColorBytesToUInt(g, b, r, a);
+                        form_this.opacity[dx] = form_this.opacity[resized_dx];
+                    }
+                }
+                form_this.UpdateColorFromHistogram(winWidth, winCentre);
+            }
+        }
+
+        public void UpdMainForm()
         {
             form_this.UpdateFromColoredTF();
         }
 
-        private bool CanDraw()
+        public bool CanDraw()
         {
             for (int i = 0; i < knots.Count; i++)
             {
@@ -414,17 +441,17 @@ namespace vme
             return true;
         }
 
-        private void reset_fn_Click(object sender, EventArgs e)
+        public void reset_fn_Click(object sender, EventArgs e)
         {
             if (form_this!=null)
             {
                 ResetValues(); 
             }
             else
-                MessageBox.Show("Сначала загрузите DICOM файл");
+                MessageBox.Show("First Load DICOM file(s)");
         }
 
-        private void Color_Click(object sender, EventArgs e)
+        public void Color_Click(object sender, EventArgs e)
         {
             ColorDialog MyDialog = new ColorDialog();
             MyDialog.AllowFullOpen = true;
@@ -443,7 +470,7 @@ namespace vme
             }
         }
 
-        private bool InKnotArea(int num)
+        public bool InKnotArea(int num)
         {
             if (pp.p.X >= (knots[num].p.X - 4) && pp.p.Y >= knots[num].p.Y - 4 && pp.p.X <= knots[num].p.X + 4 && pp.p.Y <= knots[num].p.Y + 4)
                 return true;
@@ -451,7 +478,7 @@ namespace vme
                 return false;
         }
 
-        private bool CheckActivePoint() 
+        public bool CheckActivePoint() 
         {
             bool shot = false;
 
@@ -470,7 +497,7 @@ namespace vme
             return false;
         }
 
-        private void CheckCoordsAndPutActivePoint()
+        public void CheckCoordsAndPutActivePoint()
         {
             if (knots.Count > 1)
             {
@@ -526,11 +553,8 @@ namespace vme
             }
         }
 
-       
-
-        private void ColoredTF_MouseClick(object sender, MouseEventArgs e) 
+        public void ColoredTF_MouseClick(object sender, MouseEventArgs e) 
         {
-            
             if (form_this != null)
             {
                 bool is_active=false;
@@ -545,7 +569,7 @@ namespace vme
                         {
                             knots[active_number] = active_point;
                             is_active_global = true;
-                            this.active.Text = "Активно";
+                            this.active.Text = "Active";
                             this.cordX.Text = "x: " + Convert.ToString(active_point.p.X);
                             this.cordY.Text = "y: " + Convert.ToString(active_point.p.Y);
                             this.red.Text = "R " + Convert.ToString(preactive_color.R);
@@ -578,7 +602,7 @@ namespace vme
                         active_point.c = preactive_color;
                         knots[active_number] = active_point;
                         active_point.c = System.Drawing.Color.YellowGreen;
-                        this.active.Text = "Неактивно";
+                        this.active.Text = "Unactive";
                         this.cordX.Text = "x: ";
                         this.cordY.Text = "y: ";
                         this.red.Text = "R ";
@@ -586,7 +610,6 @@ namespace vme
                         this.blue.Text = "B ";
                         this.alpha.Text = "A ";
                         this.opacity.Text = "O ";
-
                         paint_histogram = true;
                         Invalidate();
                     }
@@ -596,7 +619,7 @@ namespace vme
         }
 
         /* Строит гистограмму для текущего *окна* изображения  */
-        private void DrawHistogram(Graphics g) 
+        public void DrawHistogram(Graphics g) 
         {
             float koeffy;
             float perc;
@@ -626,7 +649,7 @@ namespace vme
             //paint_histogram = false;
         }
 
-        private void ColoredTF_Paint(object sender, PaintEventArgs e) 
+        public void ColoredTF_Paint(object sender, PaintEventArgs e) 
         {
             Bitmap bmp = new Bitmap(this.Width, this.Height);
             Graphics gr = Graphics.FromImage(bmp);
@@ -650,17 +673,14 @@ namespace vme
         
         }
 
-        private short TransformationPx(int px)
-        {
+        public short TransformationPx(int px){
 
             double factor = (double)(255 / (double)(winMax - winMin));
             return (short)(((px / factor) + winMin) - 32768);
-
         }
 
-        private float TransformationPy(Knot k1, Knot k2, int dx) 
+        public float TransformationPy(Knot k1, Knot k2, int dx) 
         {
-
             float x, x0, x1;
             float y, y0, y1;
             x = dx;
@@ -674,8 +694,7 @@ namespace vme
 
         }
 
-        
-        private void presets_TextChanged(object sender, EventArgs e) 
+        public void presets_TextChanged(object sender, EventArgs e) 
         {
             if (form_this != null)
             {
@@ -685,7 +704,7 @@ namespace vme
                 pp.c = System.Drawing.Color.Black;
                 knots.Add(pp);  
 
-                if (presets.Text == "Кости1")
+                if (presets.Text == "Bones 1")
                 {
                     
                     for (int i = 1; i < 6; i++)
@@ -707,7 +726,7 @@ namespace vme
                         }
                     }
                 }
-                if (presets.Text == "Кости2")
+                if (presets.Text == "Bones 2")
                 {
                     for (int i = 1; i < 13; i++)
                     {
@@ -725,23 +744,20 @@ namespace vme
                             case 10:{ pp.p.X = 375; pp.p.Y = 242; pp.c = System.Drawing.Color.FromArgb(0, 128, 255); break; }
                             case 11:{ pp.p.X = 408; pp.p.Y = 236; pp.c = System.Drawing.Color.FromArgb(0, 128, 192); break; }
                             case 12:{ pp.p.X = 428; pp.p.Y = 225; pp.c = System.Drawing.Color.FromArgb(255, 255, 255); break; }
-
                         }
 
                         if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && CanDraw() && form_this != null)
                         {
                             knots.Add(pp);
-
                         }
                     }
                 }
-
                 paint_histogram = true;
                 Invalidate();
             }
         }
 
-        private void EraseArrays() 
+        public void EraseArrays() 
         {
             for (int i = 0; i < form_this.colors.Count(); i++)
                 form_this.colors[i] = 0;
@@ -749,10 +765,8 @@ namespace vme
                 form_this.opacity[i] = 0;
         }
 
-     
-
         /* применят передаточную функцию к массиву, а потом к изображению */
-        private void Apply_Click(object sender, EventArgs e)
+        public void Apply_Click(object sender, EventArgs e)
         {
             byte a=0, r=0, g=0, b=0;
             float factor;

@@ -10,66 +10,69 @@ namespace vme
 {
     class DicomDecoder
     {
-        const uint PIXEL_REPRESENTATION = 0x00280103;
-        const uint TRANSFER_SYNTAX_UID = 0x00020010;
-        const uint MODALITY = 0x00080060;
-        const uint SLICE_THICKNESS = 0x00180050;
-        const uint SLICE_SPACING = 0x00180088;
-        const uint SAMPLES_PER_PIXEL = 0x00280002;
-        const uint PHOTOMETRIC_INTERPRETATION = 0x00280004;
-        const uint PLANAR_CONFIGURATION = 0x00280006;
-        const uint NUMBER_OF_FRAMES = 0x00280008;
-        const uint ROWS = 0x00280010;
-        const uint COLUMNS = 0x00280011;
-        const uint PIXEL_SPACING = 0x00280030;
-        const uint BITS_ALLOCATED = 0x00280100;
-        const uint WINDOW_CENTER = 0x00281050;
-        const uint WINDOW_WIDTH = 0x00281051;
-        const uint RESCALE_INTERCEPT = 0x00281052;
-        const uint RESCALE_SLOPE = 0x00281053;
-        const uint RED_PALETTE = 0x00281201;
-        const uint GREEN_PALETTE = 0x00281202;
-        const uint BLUE_PALETTE = 0x00281203;
-        const uint ICON_IMAGE_SEQUENCE = 0x00880200;
-        const uint PIXEL_DATA = 0x7FE00010;
-
+        private const uint PIXEL_REPRESENTATION = 0x00280103;
+        private const uint TRANSFER_SYNTAX_UID = 0x00020010;
+        private const uint MODALITY = 0x00080060;
+        private const uint SLICE_THICKNESS = 0x00180050;
+        private const uint SLICE_SPACING = 0x00180088;
+        private const uint SAMPLES_PER_PIXEL = 0x00280002;
+        private const uint PHOTOMETRIC_INTERPRETATION = 0x00280004;
+        private const uint PLANAR_CONFIGURATION = 0x00280006;
+        private const uint NUMBER_OF_FRAMES = 0x00280008;
+        private const uint ROWS = 0x00280010;
+        private const uint COLUMNS = 0x00280011;
+        private const uint PIXEL_SPACING = 0x00280030;
+        private const uint BITS_ALLOCATED = 0x00280100;
+        private const uint WINDOW_CENTER = 0x00281050;
+        private const uint WINDOW_WIDTH = 0x00281051;
+        private const uint RESCALE_INTERCEPT = 0x00281052;
+        private const uint RESCALE_SLOPE = 0x00281053;
+        private const uint RED_PALETTE = 0x00281201;
+        private const uint GREEN_PALETTE = 0x00281202;
+        private const uint BLUE_PALETTE = 0x00281203;
+        private const uint ICON_IMAGE_SEQUENCE = 0x00880200;
+        private const uint PIXEL_DATA = 0x7FE00010;
         /*There are three special SQ related Data Elements that are not ruled by the VR encoding rules
         conveyed by the Transfer Syntax. They shall be encoded as Implicit VR. NEMA DICOM 3.0*/
-        const string ITEM = "FFFEE000";
-        const string ITEM_DELIMITATION = "FFFEE00D";
-        const string SEQUENCE_DELIMITATION = "FFFEE0DD";
+        private const string ITEM = "FFFEE000";
+        private const string ITEM_DELIMITATION = "FFFEE00D";
+        private const string SEQUENCE_DELIMITATION = "FFFEE0DD";
         //----
-
         //String dicomFileName;
-        const int FIRST_OFFSET = 128;
-        const string DICM = "DICM";
+        private const int FIRST_OFFSET = 128;
+        private const string DICM = "DICM";
         
         DicomDictionary dic;
         /* Все что относится к декодированию jpg lossless */
-        JpegDecode jdec;   // декодировщик для jpg lossless см. ISO/IS 10918-1 и 10918-2
+        private JpegDecode jdec;   // декодировщик для jpg lossless см. ISO/IS 10918-1 и 10918-2
         private byte[] frag;
-       
-        public List<string> dicomInfo;
-        BinaryReader file;
+        private List<string> dicomInfo;
+        private BinaryReader file;
+        private bool readingDataElements;
+        private bool oddLocations;
+        private bool inSequence;
 
-        bool readingDataElements;
-        bool oddLocations;
-        bool inSequence;
-
-        public double rescaleIntercept, rescaleSlope;
+        private double rescaleIntercept, rescaleSlope;
+        public double Intercept
+        {
+            get { return rescaleIntercept; }
+            private set { rescaleIntercept = value; }
+        }
+        public double Slope
+        {
+            get { return rescaleSlope; }
+            private set { rescaleSlope = value; }
+        }
         //ushort planarConfiguration;
-
-        bool littleEndian = true; // by default
+        private bool littleEndian = true; // by default
 
         // bool metaHeader = true;
-        int elementLength; // because can be negative despite the fact that is a length value
-        uint vr; // Value Representation
-        uint tag;
-
-        int min8 = Char.MinValue;
-        int min16 = short.MinValue;
-
-        const int
+        private int elementLength; // because can be negative despite the fact that is a length value
+        private uint vr; // Value Representation
+        private uint tag;
+        private int min8 = Char.MinValue;
+        private int min16 = short.MinValue;
+        private const int
             AE = 0x4145,
             AS = 0x4153,
             AT = 0x4154,
@@ -98,53 +101,90 @@ namespace vme
             UN = 0x554E,
             QQ = 0x3F3F;
 
-        const int IMPLICIT_VR = 0x2D2D; 
-        public ushort bitsAllocated;
-        public int width;
-        public int height;
-        private int offset;
-        public int nImages;
-        public int samplesPerPixel;
-        public ushort pixelRepresentation;
+        private const int IMPLICIT_VR = 0x2D2D;
 
-        public int location;
+        private ushort bitsAllocated;
+        public ushort BitsAllocated {
+            get { return bitsAllocated; }
+            private set { bitsAllocated = value; }
+        }
 
-        String photoInterpretation;
-        public double pixelDepth = 1.0;
-        public double pixelWidth = 1.0;
-        public double pixelHeight = 1.0;
-        public string unit;
-
-        List<byte> pixels8;
-        List<ushort> pixels16;
-        private int ctrPixels;
-
-        bool delimiter;
-
-        long pos=-1;  // для чтения сжатого jpg
-
-
-        public bool dicomFileReadSuccess;
-        public bool compressedImage = false; // True if the image data is compressed, false otherwise.
-        public bool dicomDir;
-        public double windowCentre, windowWidth;
-        public bool signedImage = false; //
-
-        public DicomDecoder()
+        private int width;
+        private int height;
+        public int Width {
+            get { return width; }
+            private set { width = value; }
+        }
+        public int Height
         {
+            get { return height; }
+            private set { height = value; }
+        }
+
+        private int offset;
+        private int nImages;
+
+        private int samplesPerPixel;
+        public int SamplesPerPixel {
+            get { return samplesPerPixel; }
+            private set { samplesPerPixel = value; }
+        }
+        
+        private ushort pixelRepresentation;
+        private int location;
+        private String photoInterpretation;
+        private double pixelDepth;
+        private double pixelWidth;
+        private double pixelHeight;
+        private string unit;
+        private  List<byte> pixels8;
+        private  List<ushort> pixels16;
+        private int ctrPixels;
+        private bool delimiter;
+        private long pos;  // для чтения сжатого jpg
+        private bool dicomFileReadSuccess;
+
+        private bool compressedImage;
+        public bool CompressedImage {
+            get { return compressedImage; }
+            private set { compressedImage = value; }
+        }
+
+        private bool signedImage;
+        public bool SignedImage {
+            get { return signedImage; }
+            private set { signedImage = value; }
+        }
+
+        private bool dicomDir;
+
+        private double windowCentre, windowWidth;
+        public double WindowCenter {
+            get { return windowCentre; }
+            private set { windowCentre = value; }
+        }
+        public double WindowWidth
+        {
+            get { return windowWidth; }
+            private set { windowWidth = value; }
+        }
+
+        public DicomDecoder(){
             dicomInfo = new List<string>();
             dic  = new DicomDictionary();
             jdec = new JpegDecode(); 
             signedImage = false;
             dicomFileReadSuccess = false;
             dicomInfo = new List<string>();
-
             readingDataElements = true;
             oddLocations = false;
             delimiter = false;
-
             location = 0;
             bitsAllocated = 0;
+            pixelDepth = 1.0;
+            pixelWidth = 1.0;
+            pixelHeight = 1.0;
+            pos = -1;
             width = 1;
             height = 1;
             offset = 1;
@@ -152,6 +192,7 @@ namespace vme
             samplesPerPixel = 1;
             photoInterpretation = "";
             unit = "mm";
+            signedImage = false;
             compressedImage = false;
             dicomDir = false;
             windowCentre = 1;
@@ -180,7 +221,7 @@ namespace vme
             signedImage = false;
         }
 
-        private string GetString(int length)
+        public string GetString(int length)
         {
             byte[] buff = new byte[length];
             file.BaseStream.Position = location;
@@ -195,7 +236,7 @@ namespace vme
         }
 
         /* Reading byte from file*/
-        private byte ReadByte()
+        public byte ReadByte()
         {
             file.BaseStream.Position = location;
             byte b = file.ReadByte(); // 
@@ -204,7 +245,7 @@ namespace vme
         }
 
         /*Reading 16int from file unsigned*/
-        private ushort ReadShort()
+        public ushort ReadShort()
         {
             byte b0 = ReadByte();
             byte b1 = ReadByte();
@@ -221,7 +262,7 @@ namespace vme
         }
 
         /*Reading 32int from file*/
-        private int ReadInt()
+        public int ReadInt()
         {
             byte b0 = ReadByte();
             byte b1 = ReadByte();
@@ -240,7 +281,7 @@ namespace vme
 
         }
 
-        private int ReadLength()
+        public int ReadLength()
         {
             byte b0 = ReadByte();
             byte b1 = ReadByte();
@@ -306,7 +347,7 @@ namespace vme
             
         }
 
-        private uint ReadTag()
+        public uint ReadTag()
         {
             // tag consists from 2 parts:
             // grouptag and elementtag
@@ -320,7 +361,7 @@ namespace vme
             //return Convert.ToUInt32(b0 << 16 | b1);  ///  когда нахожусь в последовательности 
         }
 
-        private string GetHeaderInfo(uint tag, String value)
+        public string GetHeaderInfo(uint tag, String value)
         {
 
             string str = tag.ToString("X8"); // get tag in hex notation
@@ -412,8 +453,7 @@ namespace vme
                 return id + ": " + value;
         }
 
-
-        private void AddInfo(uint tag, string length)
+        public void AddInfo(uint tag, string length)
         {
 
             string dataElementsName = GetHeaderInfo(tag, length);
@@ -599,36 +639,6 @@ namespace vme
             return true;
         }
 
-        /*
-        public void FileClose() 
-        {
-            if (file != null)
-            {
-                file.Close();
-                dic = new DicomDictionary();
-                jdec = new JpegDecode();
-                signedImage = false;
-                dicomFileReadSuccess = false;
-                dicomInfo = new List<string>();
-                location = 0;
-                bitsAllocated = 0;
-                width = 1;
-                height = 1;
-                offset = 1;
-                nImages = 1;
-                samplesPerPixel = 1;
-                photoInterpretation = "";
-                unit = "mm";
-                compressedImage = false;
-                dicomDir = false;
-                windowCentre = 1;
-                windowWidth = 1;
-                signedImage = false;
-            }
-
-        }
-         * */
-
         public void GetPixels8(ref List<byte> pixels)
         {
             pixels = pixels8;
@@ -639,7 +649,6 @@ namespace vme
             pixels = pixels16; //&&
         }
 
-
         /* Когда мы добрались до закодированных пикселей, сохраняем их в массив, для последующей обработки в JpegDecode */
         public void SaveFragment()
         {
@@ -647,7 +656,6 @@ namespace vme
             for (int i = 0; i < elementLength; i++)
                 frag[i] = ReadByte();
         }
-
 
         /* Читает байт из фрагмента сжатого изображения*/
         public byte ReadCompressedByte() 
@@ -673,9 +681,6 @@ namespace vme
             }
             return true;
         }
-
-
-
 
         public bool ReadLosslessPixelData() 
         {
@@ -782,5 +787,4 @@ namespace vme
             return true;
         }
     }
-    
 }
