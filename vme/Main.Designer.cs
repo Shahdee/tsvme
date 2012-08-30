@@ -42,9 +42,10 @@
             this.openKid = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.volumeReconstruction = new System.Windows.Forms.ToolStripMenuItem();
-            this.ColoredTFobj = new vme.ColoredTF();
-            this.Windowing = new vme.Windowing();
-            this.ImagePlane = new vme.Canvas();
+            this.ColoredTFobj = new ColoredTF();
+            this.Windowing = new Windowing();
+            this.ImagePlane = new Canvas();
+            this.view = new ImageViewer();  // HERE IT IS!
             this.newFormToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.float1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.float2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -206,7 +207,6 @@
             this.newFormToolStripMenuItem.Name = "newFormToolStripMenuItem";
             this.newFormToolStripMenuItem.Size = new System.Drawing.Size(74, 20);
             this.newFormToolStripMenuItem.Text = "New Form";
-            this.newFormToolStripMenuItem.Click += new System.EventHandler(this.newFormToolStripMenuItem_Click);
             // 
             // float1ToolStripMenuItem
             // 
@@ -257,6 +257,7 @@
         #endregion
 
         private Canvas ImagePlane;
+        private ImageViewer view;
         private System.Windows.Forms.Button Reset;
         private System.Windows.Forms.Button AssignCA;
         private Windowing Windowing;

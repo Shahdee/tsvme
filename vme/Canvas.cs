@@ -22,8 +22,15 @@ namespace vme
         private int imgHeight;
         private int panWidth;
         private int panHeight;
-        private bool newImage;
-        private bool viewcolor;
+
+        private bool newImage; 
+        public bool NewImage
+        {
+            get { return newImage; }
+            set { newImage = value; } // WRONG
+        }
+
+        public bool viewcolor; // WRONG
 
         private int winMin;
         private int winMax;
@@ -40,7 +47,13 @@ namespace vme
         private double changeValCentre;
         private bool rightMouseDown;
         private bool imageAvailable;
-        private bool signed16Image;
+
+        public bool signed16Image; // WRONG
+        public bool Signed16Image
+        {
+            get { return signed16Image; }
+            set { signed16Image = value; } // WRONG
+        }
 
         private byte[] lut8;
         private byte[] lut16;
@@ -100,17 +113,7 @@ namespace vme
             viewcolor = false;
         }
 
-        public bool NewImage{
-            get { return newImage; }
-            private set{newImage = value;}
-        }
-
-        public bool Signed16Image{
-            get { return signed16Image; }
-            private set { signed16Image = value; }
-        }
-
-        unsafe private void UIntToColor(uint color, ref byte* row, int j1){
+        unsafe public void UIntToColor(uint color, ref byte* row, int j1){
             byte G;
             byte B;
             byte R;
@@ -481,7 +484,7 @@ namespace vme
             arr[0].x = e.X;
             arr[0].y = e.Y;
 
-            bmp.SetPixel(arr[0].x, arr[0].y, mf.inkColor);
+            bmp.SetPixel(arr[0].x, arr[0].y, mf.InkColor);
             
             while (newlength != 0)
             {
@@ -493,7 +496,7 @@ namespace vme
                         pixelColor = bmp.GetPixel(arr[i].x + 1, arr[i].y);
                         if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
                         {
-                            bmp.SetPixel(arr[i].x + 1, arr[i].y, mf.inkColor);
+                            bmp.SetPixel(arr[i].x + 1, arr[i].y, mf.InkColor);
                             newarr[newlength].x = arr[i].x + 1;
                             newarr[newlength].y = arr[i].y;
                             newlength++;
@@ -505,7 +508,7 @@ namespace vme
                         pixelColor = bmp.GetPixel(arr[i].x - 1, arr[i].y);
                         if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
                         {
-                            bmp.SetPixel(arr[i].x - 1, arr[i].y, mf.inkColor);
+                            bmp.SetPixel(arr[i].x - 1, arr[i].y, mf.InkColor);
                             newarr[newlength].x = arr[i].x - 1;
                             newarr[newlength].y = arr[i].y;
                             newlength++;
@@ -517,7 +520,7 @@ namespace vme
                         pixelColor = bmp.GetPixel(arr[i].x, arr[i].y+1);
                         if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
                         {
-                            bmp.SetPixel(arr[i].x, arr[i].y + 1, mf.inkColor);
+                            bmp.SetPixel(arr[i].x, arr[i].y + 1, mf.InkColor);
                             newarr[newlength].x = arr[i].x;
                             newarr[newlength].y = arr[i].y + 1;
                             newlength++;
@@ -529,7 +532,7 @@ namespace vme
                         pixelColor = bmp.GetPixel(arr[i].x, arr[i].y - 1);
                         if (pixelColor.A == Color.Black.A && pixelColor.R == Color.Black.R && pixelColor.G == Color.Black.G && pixelColor.B == Color.Black.B)
                         {
-                            bmp.SetPixel(arr[i].x, arr[i].y - 1, mf.inkColor);
+                            bmp.SetPixel(arr[i].x, arr[i].y - 1, mf.InkColor);
                             newarr[newlength].x = arr[i].x;
                             newarr[newlength].y = arr[i].y - 1;
                             newlength++;

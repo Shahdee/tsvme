@@ -65,6 +65,12 @@
     </Compile>
     <Compile Include="DicomDecoder.cs" />
     <Compile Include="DicomDictionary.cs" />
+    <Compile Include="ImageViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ImageViewer.Designer.cs">
+      <DependentUpon>ImageViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="JpegDecode.cs" />
     <Compile Include="JpegDictionary.cs" />
     <Compile Include="JpgParameters.cs" />
@@ -97,6 +103,9 @@
       <DependentUpon>ColoredTF.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DVR.txt" />
+    <EmbeddedResource Include="ImageViewer.resx">
+      <DependentUpon>ImageViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>

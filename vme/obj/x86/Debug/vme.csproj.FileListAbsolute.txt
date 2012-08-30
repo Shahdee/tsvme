@@ -308,3 +308,4 @@ D:\tsvme\repo\vme\obj\x86\Debug\vme.VoxelImage.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.Windowing.resources
 D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.read.1.tlog
 D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.write.1.tlog
+D:\tsvme\repo\vme\obj\x86\Debug\vme.ImageViewer.resources

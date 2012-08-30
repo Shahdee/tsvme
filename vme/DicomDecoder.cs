@@ -153,7 +153,7 @@ namespace vme
         private bool signedImage;
         public bool SignedImage {
             get { return signedImage; }
-            private set { signedImage = value; }
+            set { signedImage = value; } // must be private!!!
         }
 
         private bool dicomDir;

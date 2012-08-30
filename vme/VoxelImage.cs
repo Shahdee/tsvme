@@ -328,7 +328,7 @@ namespace vme
                         kernel.SetArg(18, GetColors());
                         kernel.SetArg(19, winWidth_vox);
                         kernel.SetArg(20, winCentre_vox);
-                        kernel.SetArg(21, form_this.knots_counter);
+                        kernel.SetArg(21, form_this.KnotsCounter);
                         kernel.SetArg(22, Convert.ToInt16(colorMi2.Text));
                         kernel.SetArg(23, Convert.ToInt16(colorMa2.Text));
                         kernel.SetArg(24, GetOpacity());

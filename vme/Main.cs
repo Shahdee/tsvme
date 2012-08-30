@@ -18,17 +18,35 @@ namespace vme
         protected List<byte> pixels8;
         protected List<ushort> pixels16;
         protected List<ushort> pixels_volume;
-        private long[] histogram;
-        private uint[] colors; // для передачи в DVR
-        private float[] opacity;
+
+        public long[] histogram;
+        public uint[] colors; // для передачи в DVR
+        public float[] opacity;
+
         private int knots_counter;
+
+        public int KnotsCounter {
+            get { return knots_counter; }
+            set { knots_counter = value; } // WRONG
+        }
         private VoxelImage vform;
         private ushort num_of_images;
         private ushort image_number;
         private string safename;
         private bool navi;
+
         private int imageWidth;
         private int imageHeight;
+
+        public int ImageWidth {
+            get { return imageWidth; }
+            private set { imageWidth = value; }
+        }
+        public int ImageHeight {
+            get { return imageHeight; }
+            private set { imageHeight = value; }
+        }
+
         private double winWidth;
         private double winCentre;
         private ushort bpp;
@@ -37,10 +55,17 @@ namespace vme
         private short intercept;
         private short slope;
         private string path;
+
         private Color inkColor;
+
+        public Color InkColor {
+            get { return inkColor; }
+            private set { inkColor = value; }
+        }
 
         public Main(){
             InitializeComponent();
+            this.IsMdiContainer = true;
             dec = new DicomDecoder();
             pixels8 = new List<byte>();
             pixels16 = new List<ushort>();
@@ -58,11 +83,8 @@ namespace vme
         public void openDicom_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-
             ofd.Filter = "All DICOM Files(*.*)|*.*";
-
-            if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0))
-            {
+            if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0)){
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.EraseFields();
@@ -77,8 +99,7 @@ namespace vme
             ofd.Dispose();
         }
 
-        public void ReadAndDisplayDicomFile(string filename, string name)
-        {
+        public void ReadAndDisplayDicomFile(string filename, string name){
             if (readable = dec.ReadFile(filename))
                 DisplayData();
             else
@@ -87,6 +108,8 @@ namespace vme
         }
 
         public void DisplayData(){
+            view = new ImageViewer(); // HERE IT IS
+            view.MdiParent = this; // HERE IT IS
             imageWidth = dec.Width;
             imageHeight = dec.Height;
             bpp = dec.BitsAllocated; // количество бит на пиксель
@@ -97,8 +120,11 @@ namespace vme
                 dec.SignedImage = true; // ага, а я ведь залочила для других классов модификацию поля
             }
             signedImage = dec.SignedImage;
-            ImagePlane.Signed16Image = dec.SignedImage; // short или ushort изображение
-            ImagePlane.NewImage = true;
+            view.Signed16Image = dec.SignedImage; // short или ushort изображение
+            view.NewImage = true;
+            /*ImagePlane.Signed16Image = dec.SignedImage; // short или ushort изображение
+            ImagePlane.NewImage = true;*/
+
             histogram = new long[256];
             if (spp == 1 && bpp == 8){
                 pixels8.Clear();
@@ -108,7 +134,8 @@ namespace vme
                     winWidth = 256;
                     winCentre = 128;
                 }
-                ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram, inkColor);
+                view.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram, inkColor);
+                //ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram, inkColor);
             }
             if (spp == 1 && bpp == 16){
                 pixels16.Clear();
@@ -116,7 +143,6 @@ namespace vme
                 dec.GetPixels16(ref pixels16);
                 intercept = (short)dec.Intercept;
                 slope = (short)dec.Slope;
-
                  // Учитываем Modality LUT
                 if (dec.Intercept < 0){
                     for (int i = 0; i < pixels16.Count; i++)
@@ -126,17 +152,15 @@ namespace vme
                     winWidth = 65536;
                     winCentre = 32768;
                 }
-
                 if (!navi){
                     for (int i = 0; i < pixels16.Count; i++){
                         pixels_volume.Add(pixels16[i]);
                     }
                 }
-
-                ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram, inkColor);
+                view.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram, inkColor);
+                //ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram, inkColor);
                 ColoredTFobj.PassAlong(this);
             }
-
             /* если у нас 16bpp lossless CT изображение */
             if (spp == 1 && bpp == 16 && dec.CompressedImage){
                 // позже доделать чтение lossless и учет предсказателя, притом что дерево уже построенно правильно и есть сырые данные
@@ -187,8 +211,7 @@ namespace vme
 
         /*  По умолчанию область*/
         private void Reset_Click(object sender, EventArgs e){
-            if (pixels8 != null || pixels16 != null)
-            {
+            if (pixels8 != null || pixels16 != null){
                 if ((pixels8.Count > 0) || (pixels16.Count > 0)){
                     EraseHistogramArray();
                     winWidth = dec.WindowWidth;
@@ -281,16 +304,9 @@ namespace vme
 
         private void volumeReconstruction_Click(object sender, EventArgs e){
             vform = new VoxelImage();
-            vform.VoxelImage_Load(pixels_volume, num_of_images, winCentre, winWidth, dec.Intercept, dec.signedImage, this);
+            vform.VoxelImage_Load(pixels_volume, num_of_images, winCentre, winWidth, dec.Intercept, dec.SignedImage, this);
             vform.Idle();
             vform.Show();
-        }
-
-        // Test
-        private void newFormToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Form fff = new Form();
-            fff.Show();
         }
     }
 }

@@ -531,14 +531,10 @@ namespace vme
 
         }
 
-        private void DecodeCycle() 
-        {
+        private void DecodeCycle(){
             property.dc = new List<int>();
             byte cnt = 0;
-            int T = 0;
-
-            while(property.ptr < property.esc.Count)
-            {
+            while(property.ptr < property.esc.Count){
                 property.dc.Add(Decode(ref cnt));
             }
         }
@@ -546,8 +542,7 @@ namespace vme
         /* The DECODE procedure decodes an 8-bit value  which,  for  the DC coefficient, determines the difference magnitude category   ISO 10918-1 */
         /* Процедура DECODE декодирует 8 битовое значение которое, для DC коэффициентов определяет difference magnitude category ISO 10918-1*/
         
-        private int Decode(ref byte cnt) 
-        {
+        private int Decode(ref byte cnt){
             int length = 1; // длина кода
             byte val;
             byte by1 = 0;
@@ -601,8 +596,6 @@ namespace vme
          */
         private int NextBit(ref byte cnt, ref byte by1) // учесть предыдущий байт!
         {
-
-            int i = 0;
             byte by2=0;
             int bit=0;
 

@@ -14,7 +14,7 @@ using OpenCLNet;
 
 namespace vme
 {
-    public class ColoredTF : UserControl
+    public partial class ColoredTF : UserControl
     {
         private int marginLeft;
         private int marginRight;
@@ -379,6 +379,7 @@ namespace vme
             pn.Dispose();
         }
 
+        /*
         public void Apply_Click(object sender, EventArgs e)
         {
             byte a=0, r=0, g=0, b=0;
@@ -424,7 +425,7 @@ namespace vme
                 }
                 form_this.UpdateColorFromHistogram(winWidth, winCentre);
             }
-        }
+        }*/
 
         public void UpdMainForm()
         {
@@ -634,7 +635,7 @@ namespace vme
                 if (histogram_255[i] > 0)
                 {
 
-                    perc = (float)((100 * (Math.Log10(histogram_255[i]))) / ((float)(Math.Log10(form_this.imageWidth * form_this.imageHeight))));
+                    perc = (float)((100 * (Math.Log10(histogram_255[i]))) / ((float)(Math.Log10(form_this.ImageWidth * form_this.ImageHeight))));
                     py = (int)(perc / koeffy);
 
                     Pen pn = new Pen(System.Drawing.Color.LightGray);
@@ -777,12 +778,10 @@ namespace vme
 
             if (form_this != null && !is_active_global)
             {
-                form_this.knots_counter = knots.Count;
+                form_this.KnotsCounter = knots.Count; // я его залочила, оно приватное
                 EraseArrays();
 
-                                
-                for (int i = 0; i < knots.Count-1 ; i++)
-                {
+                for (int i = 0; i < knots.Count-1 ; i++){
                     step = 0;
                     for (int dx = knots[i].p.X; dx < knots[i + 1].p.X; dx++)
                     {
