@@ -13,7 +13,7 @@ namespace vme
         private List<byte> pix8;
         private List<ushort> pix16;
         private long[] histogram;
-        //private Bitmap bmp;
+        private Bitmap bmp;
 
         private int hOffset;
         private int vOffset;
@@ -101,10 +101,8 @@ namespace vme
         }
 
         public void SetParameters(ref List<byte> arr, int wid, int hei, double windowWidth,
-           double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm, long[] hi, Color inkColor)
-        {
-            if (samplesPerPixel == 1)
-            {
+           double windowCentre, int samplesPerPixel, bool resetScroll, Main mainFrm, long[] hi, Color inkColor){
+            if (samplesPerPixel == 1){
                 bpp = Imagebpp.Eightbpp;
                 imgWidth = wid;
                 imgHeight = hei;
@@ -187,6 +185,19 @@ namespace vme
         }
 
 
+        public void ResetValues()
+        {
+            winMax = Convert.ToInt32(winCentre + 0.5 * winWidth);
+            winMin = winMax - winWidth;
+            UpdateMainForm();
+        }
+
+        public void UpdateMainForm()
+        {
+            mf.UpdateWindowLevel(winWidth, winCentre, bpp, histogram);
+
+        }
+
         public void SetParameters(ref List<ushort> arr, double intercept, int wid, int hei, double windowWidth,   // arr ushort
             double windowCentre, bool resetScroll, Main mainFrm, ref long[] hi, Color inkColor)
         {
@@ -226,7 +237,7 @@ namespace vme
             imageAvailable = true;
             if (this.bmp != null)
                 this.bmp.Dispose();
-            //ResetValues();
+            ResetValues();
             fillColor = inkColor;
             ComputeLookUpTable16();
             this.bmp = new Bitmap(imgWidth, imgHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -365,5 +376,27 @@ namespace vme
             return;
         }
 
+        public void ImageViewer_Paint(object sender, PaintEventArgs e)
+        {
+            if (bpp == Imagebpp.Eightbpp)
+            {
+                if (pix8.Count > 0)
+                {
+                    Graphics g = Graphics.FromHwnd(this.Handle);
+                    if (newImage == true)
+                    {
+                        g.Clear(SystemColors.Control);
+                        newImage = false;
+                    }
+
+                    g.DrawImage(bmp, hOffset, vOffset);
+                    g.Dispose();
+                }
+            }
+            else if (bpp == Imagebpp.Sixteenbpp)
+            {
+                e.Graphics.DrawImage(bmp, this.ClientRectangle.X, this.ClientRectangle.Y);
+            }
+        }
     }
 }

@@ -51,14 +51,14 @@
             // 
             // surface
             // 
-            this.surface.Location = new System.Drawing.Point(3, 3);
+            this.surface.Location = new System.Drawing.Point(4, 3);
             this.surface.Name = "surface";
-            this.surface.Size = new System.Drawing.Size(776, 576);
+            this.surface.Size = new System.Drawing.Size(775, 576);
             this.surface.TabIndex = 5;
+            this.surface.MouseClick += new System.Windows.Forms.MouseEventHandler(this.surface_MouseClick);
             this.surface.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseDown);
             this.surface.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseMove);
             this.surface.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Surface_MouseUp);
-            this.surface.MouseClick +=new System.Windows.Forms.MouseEventHandler(surface_MouseClick);
             // 
             // Canvas
             // 

@@ -236,6 +236,7 @@ float4 GetLightning(
 // пересечение луча с боксом
 bool intersect(float4 pos, float4 direction, float4 boxMinCon, float4 boxMaxCon, float* kmin, float* kmax)
 {
+
 	float t0 = FLT_MIN;
 	float t1 = FLT_MAX;
 	float inDirection = 1.0f / direction.S0; // x

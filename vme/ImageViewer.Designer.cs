@@ -37,6 +37,7 @@
             this.ClientSize = new System.Drawing.Size(496, 474);
             this.Name = "ImageViewer";
             this.Text = "ImageViewer";
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.ImageViewer_Paint);
             this.ResumeLayout(false);
 
         }

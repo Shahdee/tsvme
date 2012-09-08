@@ -19,9 +19,9 @@ namespace vme
         protected List<ushort> pixels16;
         protected List<ushort> pixels_volume;
 
-        public long[] histogram;
+        public long[] histogram; // WRONG
         public uint[] colors; // для передачи в DVR
-        public float[] opacity;
+        public float[] opacity; // WRONG
 
         private int knots_counter;
 
@@ -88,12 +88,9 @@ namespace vme
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.EraseFields();
-                ImagePlane.EraseFields();
-
                 Cursor = Cursors.WaitCursor;
                 ReadAndDisplayDicomFile(ofd.FileName, ofd.SafeFileName);
                 Cursor = Cursors.Default;
-                image_label.Text = ofd.FileName;
                 num_of_images++;
             }
             ofd.Dispose();
@@ -110,6 +107,7 @@ namespace vme
         public void DisplayData(){
             view = new ImageViewer(); // HERE IT IS
             view.MdiParent = this; // HERE IT IS
+            view.Show();
             imageWidth = dec.Width;
             imageHeight = dec.Height;
             bpp = dec.BitsAllocated; // количество бит на пиксель
@@ -167,7 +165,7 @@ namespace vme
             }
         }
 
-        private void EraseHistogramArray(){
+        public void EraseHistogramArray(){
             for (int i = 0; i < 256; i++)
                 histogram[i] = 0;
         }
@@ -181,7 +179,7 @@ namespace vme
             int w = (int)winWidth;
             int с = (int)winCentre;
 
-            this.Windowing.SetWindowWidthCentre(winMin, winMax, w, с, bpp, signedImage);
+            //this.Windowing.SetWindowWidthCentre(winMin, winMax, w, с, bpp, signedImage);
             this.ColoredTFobj.SetParametersHistogram(winMin, winMax, w, с, bpp, signedImage, histogram);
         }
 
@@ -189,43 +187,44 @@ namespace vme
             winWidth = dec.WindowWidth;
             winCentre = dec.WindowCenter;
 
-            this.ImagePlane.viewcolor = false;
+            //this.ImagePlane.viewcolor = false;
             //EraseHistogramArray();
-            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram, inkColor);
+            //this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram, inkColor);
         }
          
         public void UpdateColorFromHistogram(double width_from_coloredTF, double center_from_coloredTF){
             int width = (int)(width_from_coloredTF);
             int center = (int)(center_from_coloredTF+short.MinValue);
 
-            this.ImagePlane.viewcolor = true;
+            //this.ImagePlane.viewcolor = true;
             //this.ImagePlane.EraseHistogramArray();
-            this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, width, center, false, this, ref  histogram, inkColor);
+            //this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, width, center, false, this, ref  histogram, inkColor);
         }
 
-        private void MainClose(object sender, FormClosingEventArgs e){
+        public void MainClose(object sender, FormClosingEventArgs e){
             pixels8.Clear();
             pixels16.Clear();
-            ImagePlane.Dispose();
+            //ImagePlane.Dispose();
         }
 
         /*  По умолчанию область*/
-        private void Reset_Click(object sender, EventArgs e){
+        public void Reset_Click(object sender, EventArgs e)
+        {
             if (pixels8 != null || pixels16 != null){
                 if ((pixels8.Count > 0) || (pixels16.Count > 0)){
                     EraseHistogramArray();
                     winWidth = dec.WindowWidth;
                     winCentre = dec.WindowCenter;
-                    ImagePlane.viewcolor = false;
+                    //ImagePlane.viewcolor = false;
                     if (bpp == 8)
                     {
-                        if (spp == 1)
-                            ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram, inkColor);
+                        if (spp == 1) { }
+                            //ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram, inkColor);
                     }
 
-                    if (bpp == 16)
+                    if (bpp == 16) { }
                     {
-                        ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram, inkColor);
+                        //ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram, inkColor);
                     }
                 }
             }
@@ -233,33 +232,36 @@ namespace vme
                 MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров!");
         }
 
-        private void backward_Click(object sender, EventArgs e){
+        public void backward_Click(object sender, EventArgs e)
+        {
             if (image_number>1){
                 pixels16.Clear();
                 dec.EraseFields();
-                ImagePlane.EraseFields();
+                //ImagePlane.EraseFields();
                 image_number--;
-                image_label.Text = path + image_number;
+                //image_label.Text = path + image_number;
                 safename = "_" + image_number;
                 navi = true;
                 ReadAndDisplayDicomFile(path + safename, safename);
             }
         }
 
-        private void forward_Click(object sender, EventArgs e){
+        public void forward_Click(object sender, EventArgs e)
+        {
             if (image_number < num_of_images){
                 pixels16.Clear();
                 dec.EraseFields();
-                ImagePlane.EraseFields();
+                //ImagePlane.EraseFields();
                 image_number++;
-                image_label.Text = path + image_number;
+                //image_label.Text = path + image_number;
                 safename = "_" + image_number;
                 navi = true;
                 ReadAndDisplayDicomFile(path + safename, safename);
             }
         }
 
-        private void inkButton_Click(object sender, EventArgs e){
+        public void inkButton_Click(object sender, EventArgs e)
+        {
             ColorDialog inkDialog = new ColorDialog();
             inkDialog.AllowFullOpen = true;
             inkDialog.ShowHelp = true;
@@ -268,41 +270,44 @@ namespace vme
             }
         }
 
-        private void openChest_Click(object sender, EventArgs e){
+        public void openChest_Click(object sender, EventArgs e)
+        {
             path = "D:\\tsvme\\DICOM images\\my\\";
             for (int i = 1; i < 167; i++){
                 safename = "_" + Convert.ToString(i);
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.EraseFields();
-                ImagePlane.EraseFields();
+                //ImagePlane.EraseFields();
                 Cursor = Cursors.WaitCursor;
                 ReadAndDisplayDicomFile(path + safename, safename);
                 Cursor = Cursors.Default;
-                image_label.Text = path + safename;
+                //image_label.Text = path + safename;
                 num_of_images++;
             }
             image_number = num_of_images;
         }
 
-        private void openKid_Click(object sender, EventArgs e){
+        public void openKid_Click(object sender, EventArgs e)
+        {
             path = "D:\\tsvme\\DICOM images\\kid\\";
             for (int i = 30; i < 190; i++){
                 safename = "_" + Convert.ToString(i);
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.EraseFields();
-                ImagePlane.EraseFields();
+                //ImagePlane.EraseFields();
                 Cursor = Cursors.WaitCursor;
                 ReadAndDisplayDicomFile(path + safename, safename);
                 Cursor = Cursors.Default;
-                image_label.Text = path + safename;
+                //image_label.Text = path + safename;
                 num_of_images++;
             }
             image_number = num_of_images;
         }
 
-        private void volumeReconstruction_Click(object sender, EventArgs e){
+        public void volumeReconstruction_Click(object sender, EventArgs e)
+        {
             vform = new VoxelImage();
             vform.VoxelImage_Load(pixels_volume, num_of_images, winCentre, winWidth, dec.Intercept, dec.SignedImage, this);
             vform.Idle();

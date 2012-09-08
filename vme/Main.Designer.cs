@@ -28,13 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Reset = new System.Windows.Forms.Button();
             this.AssignCA = new System.Windows.Forms.Button();
-            this.image_label = new System.Windows.Forms.Label();
-            this.backward = new System.Windows.Forms.Button();
-            this.forward = new System.Windows.Forms.Button();
             this.inkDialog = new System.Windows.Forms.ColorDialog();
-            this.inkButton = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.openDicom = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,26 +37,14 @@
             this.openKid = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.volumeReconstruction = new System.Windows.Forms.ToolStripMenuItem();
-            this.ColoredTFobj = new ColoredTF();
-            this.Windowing = new Windowing();
-            this.ImagePlane = new Canvas();
-            this.view = new ImageViewer();  // HERE IT IS!
-            this.newFormToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.float1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.float2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.float3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ColoredTFobj = new vme.ColoredTF();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // Reset
-            // 
-            this.Reset.Location = new System.Drawing.Point(416, 39);
-            this.Reset.Name = "Reset";
-            this.Reset.Size = new System.Drawing.Size(95, 35);
-            this.Reset.TabIndex = 4;
-            this.Reset.Text = "Default ROI";
-            this.Reset.UseVisualStyleBackColor = true;
-            this.Reset.Click += new System.EventHandler(this.Reset_Click);
             // 
             // AssignCA
             // 
@@ -72,56 +55,19 @@
             this.AssignCA.Text = "Присвоить ц/п";
             this.AssignCA.UseVisualStyleBackColor = true;
             // 
-            // image_label
-            // 
-            this.image_label.AutoSize = true;
-            this.image_label.Location = new System.Drawing.Point(659, 30);
-            this.image_label.Name = "image_label";
-            this.image_label.Size = new System.Drawing.Size(63, 13);
-            this.image_label.TabIndex = 8;
-            this.image_label.Text = "Image path:";
-            // 
-            // backward
-            // 
-            this.backward.Location = new System.Drawing.Point(581, 110);
-            this.backward.Name = "backward";
-            this.backward.Size = new System.Drawing.Size(75, 36);
-            this.backward.TabIndex = 10;
-            this.backward.Text = "Backward";
-            this.backward.UseVisualStyleBackColor = true;
-            this.backward.Click += new System.EventHandler(this.backward_Click);
-            // 
-            // forward
-            // 
-            this.forward.Location = new System.Drawing.Point(581, 162);
-            this.forward.Name = "forward";
-            this.forward.Size = new System.Drawing.Size(75, 36);
-            this.forward.TabIndex = 11;
-            this.forward.Text = "Forward";
-            this.forward.UseVisualStyleBackColor = true;
-            this.forward.Click += new System.EventHandler(this.forward_Click);
-            // 
             // inkDialog
             // 
             this.inkDialog.Color = System.Drawing.Color.OrangeRed;
-            // 
-            // inkButton
-            // 
-            this.inkButton.Location = new System.Drawing.Point(1126, 30);
-            this.inkButton.Name = "inkButton";
-            this.inkButton.Size = new System.Drawing.Size(75, 30);
-            this.inkButton.TabIndex = 13;
-            this.inkButton.Text = "Ink ";
-            this.inkButton.UseVisualStyleBackColor = true;
-            this.inkButton.Click += new System.EventHandler(this.inkButton_Click);
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1,
             this.editToolStripMenuItem,
+            this.viewToolStripMenuItem,
             this.volumeReconstruction,
-            this.newFormToolStripMenuItem});
+            this.toolsToolStripMenuItem,
+            this.settingsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1213, 24);
@@ -161,6 +107,9 @@
             // 
             // editToolStripMenuItem
             // 
+            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToolStripMenuItem,
+            this.loadToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
@@ -172,6 +121,36 @@
             this.volumeReconstruction.Text = "3D";
             this.volumeReconstruction.Click += new System.EventHandler(this.volumeReconstruction_Click);
             // 
+            // viewToolStripMenuItem
+            // 
+            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.viewToolStripMenuItem.Text = "View";
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.settingsToolStripMenuItem.Text = "Settings";
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.saveToolStripMenuItem.Text = "Save";
+            // 
+            // loadToolStripMenuItem
+            // 
+            this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
+            this.loadToolStripMenuItem.Text = "Load";
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
             // ColoredTFobj
             // 
             this.ColoredTFobj.BackColor = System.Drawing.SystemColors.Control;
@@ -181,51 +160,6 @@
             this.ColoredTFobj.Size = new System.Drawing.Size(620, 350);
             this.ColoredTFobj.TabIndex = 6;
             // 
-            // Windowing
-            // 
-            this.Windowing.BackColor = System.Drawing.SystemColors.Control;
-            this.Windowing.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.Windowing.Location = new System.Drawing.Point(27, 80);
-            this.Windowing.Name = "Windowing";
-            this.Windowing.Size = new System.Drawing.Size(484, 180);
-            this.Windowing.TabIndex = 5;
-            // 
-            // ImagePlane
-            // 
-            this.ImagePlane.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ImagePlane.Location = new System.Drawing.Point(662, 64);
-            this.ImagePlane.Name = "ImagePlane";
-            this.ImagePlane.Size = new System.Drawing.Size(539, 539);
-            this.ImagePlane.TabIndex = 1;
-            // 
-            // newFormToolStripMenuItem
-            // 
-            this.newFormToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.float1ToolStripMenuItem,
-            this.float2ToolStripMenuItem,
-            this.float3ToolStripMenuItem});
-            this.newFormToolStripMenuItem.Name = "newFormToolStripMenuItem";
-            this.newFormToolStripMenuItem.Size = new System.Drawing.Size(74, 20);
-            this.newFormToolStripMenuItem.Text = "New Form";
-            // 
-            // float1ToolStripMenuItem
-            // 
-            this.float1ToolStripMenuItem.Name = "float1ToolStripMenuItem";
-            this.float1ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.float1ToolStripMenuItem.Text = "Float1";
-            // 
-            // float2ToolStripMenuItem
-            // 
-            this.float2ToolStripMenuItem.Name = "float2ToolStripMenuItem";
-            this.float2ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.float2ToolStripMenuItem.Text = "Float2";
-            // 
-            // float3ToolStripMenuItem
-            // 
-            this.float3ToolStripMenuItem.Name = "float3ToolStripMenuItem";
-            this.float3ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.float3ToolStripMenuItem.Text = "Float3";
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -233,14 +167,7 @@
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
-            this.Controls.Add(this.inkButton);
-            this.Controls.Add(this.forward);
-            this.Controls.Add(this.backward);
-            this.Controls.Add(this.image_label);
             this.Controls.Add(this.ColoredTFobj);
-            this.Controls.Add(this.Windowing);
-            this.Controls.Add(this.Reset);
-            this.Controls.Add(this.ImagePlane);
             this.Controls.Add(this.menuStrip1);
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
@@ -256,18 +183,11 @@
 
         #endregion
 
-        private Canvas ImagePlane;
         private ImageViewer view;
-        private System.Windows.Forms.Button Reset;
         private System.Windows.Forms.Button AssignCA;
-        private Windowing Windowing;
         private ColoredTF ColoredTFobj;
-        private System.Windows.Forms.Label image_label;
-        private System.Windows.Forms.Button backward;
-        private System.Windows.Forms.Button forward;
         private System.Windows.Forms.ColorDialog inkDialog;
         private System.Windows.Forms.Button inkDialogButton;
-        private System.Windows.Forms.Button inkButton;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem openDicom;
@@ -275,10 +195,11 @@
         private System.Windows.Forms.ToolStripMenuItem openKid;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem volumeReconstruction;
-        private System.Windows.Forms.ToolStripMenuItem newFormToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem float1ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem float2ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem float3ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         
     }
 }
