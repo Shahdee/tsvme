@@ -80,9 +80,27 @@
     <Compile Include="Main.Designer.cs">
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
+    <Compile Include="Presets.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Presets.Designer.cs">
+      <DependentUpon>Presets.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ROI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ROI.Designer.cs">
+      <DependentUpon>ROI.cs</DependentUpon>
+    </Compile>
     <Compile Include="SystemClasses.cs" />
+    <Compile Include="TransferFunction.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TransferFunction.Designer.cs">
+      <DependentUpon>TransferFunction.cs</DependentUpon>
+    </Compile>
     <Compile Include="VoxelImage.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -119,6 +137,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="TransferFunction.resx">
+      <DependentUpon>TransferFunction.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="VoxelImage.resx">
       <DependentUpon>VoxelImage.cs</DependentUpon>
     </EmbeddedResource>

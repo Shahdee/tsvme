@@ -105,9 +105,20 @@ namespace vme
         }
 
         public void DisplayData(){
+            /* here I can add work panels */
             view = new ImageViewer(); // HERE IT IS
             view.MdiParent = this; // HERE IT IS
-            view.Show();
+            tf = new TransferFunction(); // HERE IT IS
+            tf.MdiParent = this; // HERE IT IS
+            roi = new ROI();
+            roi.MdiParent = this;
+            pr = new Presets();
+            pr.MdiParent = this;
+            view.Show(); // HERE IT IS
+            tf.Show(); // HERE IT IS
+            roi.Show();
+            pr.Show();
+
             imageWidth = dec.Width;
             imageHeight = dec.Height;
             bpp = dec.BitsAllocated; // количество бит на пиксель
@@ -157,7 +168,8 @@ namespace vme
                 }
                 view.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram, inkColor);
                 //ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, true, this, ref histogram, inkColor);
-                ColoredTFobj.PassAlong(this);
+                //ColoredTFobj.PassAlong(this);
+                tf.PassAlong(this);
             }
             /* если у нас 16bpp lossless CT изображение */
             if (spp == 1 && bpp == 16 && dec.CompressedImage){
@@ -180,7 +192,8 @@ namespace vme
             int с = (int)winCentre;
 
             //this.Windowing.SetWindowWidthCentre(winMin, winMax, w, с, bpp, signedImage);
-            this.ColoredTFobj.SetParametersHistogram(winMin, winMax, w, с, bpp, signedImage, histogram);
+            //this.ColoredTFobj.SetParametersHistogram(winMin, winMax, w, с, bpp, signedImage, histogram);
+            this.tf.SetParametersHistogram(winMin, winMax, w, с, bpp, signedImage, histogram);
         }
 
         public void UpdateFromColoredTF(){

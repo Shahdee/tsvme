@@ -42,7 +42,9 @@
             this.volumeReconstruction = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ColoredTFobj = new vme.ColoredTF();
+            this.presetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rOIToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.transferFunctionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -128,6 +130,10 @@
             // 
             // viewToolStripMenuItem
             // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.presetsToolStripMenuItem,
+            this.rOIToolStripMenuItem,
+            this.transferFunctionToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -151,14 +157,23 @@
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "Settings";
             // 
-            // ColoredTFobj
+            // presetsToolStripMenuItem
             // 
-            this.ColoredTFobj.BackColor = System.Drawing.SystemColors.Control;
-            this.ColoredTFobj.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ColoredTFobj.Location = new System.Drawing.Point(27, 266);
-            this.ColoredTFobj.Name = "ColoredTFobj";
-            this.ColoredTFobj.Size = new System.Drawing.Size(620, 350);
-            this.ColoredTFobj.TabIndex = 6;
+            this.presetsToolStripMenuItem.Name = "presetsToolStripMenuItem";
+            this.presetsToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.presetsToolStripMenuItem.Text = "Presets";
+            // 
+            // rOIToolStripMenuItem
+            // 
+            this.rOIToolStripMenuItem.Name = "rOIToolStripMenuItem";
+            this.rOIToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.rOIToolStripMenuItem.Text = "ROI";
+            // 
+            // transferFunctionToolStripMenuItem
+            // 
+            this.transferFunctionToolStripMenuItem.Name = "transferFunctionToolStripMenuItem";
+            this.transferFunctionToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.transferFunctionToolStripMenuItem.Text = "Transfer Function";
             // 
             // Main
             // 
@@ -167,7 +182,6 @@
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
-            this.Controls.Add(this.ColoredTFobj);
             this.Controls.Add(this.menuStrip1);
             this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
@@ -185,8 +199,11 @@
         #endregion
 
         private ImageViewer view;
+        private TransferFunction tf;
+        private ROI roi;
+        private Presets pr;
         private System.Windows.Forms.Button AssignCA;
-        private ColoredTF ColoredTFobj;
+        //private ColoredTF ColoredTFobj; // I dont need it anymore
         private System.Windows.Forms.ColorDialog inkDialog;
         private System.Windows.Forms.Button inkDialogButton;
         private System.Windows.Forms.MenuStrip menuStrip1;
@@ -201,6 +218,9 @@
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem presetsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rOIToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem transferFunctionToolStripMenuItem;
         
     }
 }
