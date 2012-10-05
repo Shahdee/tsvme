@@ -3,1356 +3,6 @@ void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
 {
 	global uchar* pixel = (global uchar*)(line + x);
 
-	pixel[0] = b;	//blue
-	pixel[1] = g;	//green
-	pixel[2] = r;	//red
-	pixel[3] = 255;	//alpha
-}
-
-bool intersectBBox(float4 rayStart, float4 rayDirection, float4 bboxMin, float4 bboxMax, float* tmin, float* tmax)
-{
-	float t0 = FLT_MIN;
-	float t1 = FLT_MAX;
-	
-	float invRayDir = 1.0f / rayDirection.S0;
-	float tNear = (bboxMin.S0 - rayStart.S0) * invRayDir;
-	float  tFar = (bboxMax.S0 - rayStart.S0) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-				
-	invRayDir = 1.0f / rayDirection.S1;
-	tNear = (bboxMin.S1 - rayStart.S1) * invRayDir;
-	tFar = (bboxMax.S1 - rayStart.S1) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	invRayDir = 1.0f / rayDirection.S2;
-	tNear = (bboxMin.S2 - rayStart.S2) * invRayDir;
-	tFar = (bboxMax.S2 - rayStart.S2) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	*tmin = t0;
-	*tmax = t1;
-
-	return true;
-}
-
-short getVolumeValue(float x, float y, float z, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax, short cut){
-
-	if(x &lt; boxmin.S0 + 1 || x &gt; boxmax.S0 - 1 ||
-	   y &lt; boxmin.S1 + 1 || y &gt; boxmax.S1 - 1 ||
-	   z &lt; boxmin.S2 + 1 || z &gt; boxmax.S2 - 1 ||
-	   x &gt;= blocksize || x &lt; 0 ||
-	   y &gt;= blocksize || y &lt; 0 ||
-	   z &gt;= blocksize || z &lt; 0){
-	   return 0;
-	}
-
-	if(cut == 1 &amp;&amp; (volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &gt; colormin
-					&amp;&amp; volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &lt; colormax)){
-					return 0;
-	}
-
-	return volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)];	
-}
-
-
-float4 calculateGradient(float4 position,global short* volume, int blocksize, int gradient_type,float4 boxmin, float4 boxmax,short colormin, short colormax,short cut){	
-	
-	float gradientX = 0;
-	float gradientY = 0;
-	float gradientZ = 0;
-
-	if(gradient_type == 0)
-	{
-		//Central Difference Operator:
-		gradientX = getVolumeValue(position.s0 + 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0 - 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientY = getVolumeValue(position.s0, position.s1 + 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1 - 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientZ = getVolumeValue(position.s0, position.s1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);		  
-	}
-	else if(gradient_type == 1)
-	{
-		const float k1 = 0.577350269; // = sqrt(3)/3
-		const float k2 = 0.707106781; // = sqrt(2)/2
-	
-		//Zucker-Hummel Operator:
-		gradientX = (getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k1 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-	
-		gradientY = (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));		
-	
-		gradientZ = (getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-
-	}else if(gradient_type == 2){
-		//Sobel-3D operator
-		gradientX = -1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					6 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientY = 1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					6  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientZ = -1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)];
-
-					gradientX *= 1;
-					gradientY *= -1;
-					gradientZ *= -1;
-	}
-	return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
-}
-
-float4 getColor(float4 pos, float4 norm, float4 lightPosition,global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax)
-{
-	float value = getVolumeValue(pos.s0,pos.s1,pos.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,0);
-	
-	float4 color;
-	if(value &gt; colormin &amp;&amp; value &lt; colormax){
-		color=(float4)(1,0.5,0.5,0);
-	}else{
-		color=(float4)(1,1,1,0);
-	}
-
-	float4 livec = fast_normalize(lightPosition -  pos);
-	float illum = dot(livec,norm);
-	bool haslight = false;
-
-	if(illum &gt; 0)
-	{
-		return illum * color;		
-		haslight = true;
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 traceRay(float4 raySource, 
-				float4 rayDirection, 
-				global short* volume, 
-				int blocksize, 
-				float4 lightPosition,
-				float4 boxmin,
-				float4 boxmax,
-				int gradient_type,
-				short colormin,
-				short colormax,
-				short cut){
-		
-	float tmin = 0;
-	float tmax = 0;
-	
-	if(!intersectBBox(raySource, 
-					  rayDirection,
-					  boxmin, 
-					  boxmax, 
-					  &amp;tmin, 
-					  &amp;tmax))
-	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
-	}
-	
-	float4 actualPoint;
-	const float bigstep = 5;
-	const float smallstep = 0.5;
-
-	for(float t=tmin;t&lt;tmax;t+=bigstep)
-	{
-		actualPoint = raySource + t * rayDirection;		
-		if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-		{
-				for(float u=t-bigstep;u&lt;tmax;u+=smallstep)
-				{																								  					
-					actualPoint = raySource + u * rayDirection;
-					if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-					{
-						float4 gradient = calculateGradient(actualPoint,volume,blocksize,gradient_type,boxmin,boxmax,colormin,colormax,cut);
-						float4 color = getColor(actualPoint, gradient, lightPosition, volume, blocksize,boxmin,boxmax,colormin,colormax);
-						return (float4)(color.s0, color.S1, color.S2, 0);												
-					}
-				}
-		}		
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 getRayDirection(int width, int height, int x, int y, float4 forward, float4 right, float4 up)
-{
-	float ratio = (float)width / height;
-	float recenteredX = (x - (width/2)) / (2.0f * width) * ratio;
-	float recenteredY = (y - (height/2)) / (2.0f * height) ;
-	return fast_normalize(forward + (recenteredX * right) + (recenteredY * up));
-}
- 
-kernel void RayCaster (int width, 
-                       int height, 
-					   global uchar* pOutput, 
-					   int outputStride, 
-					   float4 cameraPosition, 
-					   float4 cameraForward, 
-					   float4 cameraRight, 
-					   float4 cameraUp, 
-					   global short* volume, 
-					   int blocksize,
-					   float4 lightPosition,
-					   float4 boxmin,
-					   float4 boxmax,
-					   int gradient_type,
-					   short colormin,
-					   short colormax,
-					   short cut)
-{
-	size_t x = get_global_id(0);
-	size_t y = get_global_id(1);	
-	global uchar4* pO = (global uchar4*)(pOutput+y*outputStride);
-	float4 rayDirection = getRayDirection(width, height, x, y, cameraForward, cameraRight, cameraUp);
-	float4 color = traceRay(cameraPosition, 
-							rayDirection, 
-							volume, 
-							blocksize, 
-							lightPosition,
-							boxmin,
-							boxmax,
-							gradient_type,
-							colormin,
-							colormax,
-							cut);
-	setPixel(pO, x, (int)(color.s0 &gt; 1 ? 255 : color.s0 * 255), 
-					(int)(color.s1 &gt; 1 ? 255 : color.s1 * 255), 
-					(int)(color.s2 &gt; 1 ? 255 : color.s2 * 255));
-}
-</Source><Platform>NVIDIA CUDA</Platform><Device>GeForce 9800 GTX/9800 GTX+</Device><DriverVersion>301.42</DriverVersion><BinaryName>4yo3hbfp.qda</BinaryName></MetaFile><MetaFile><Source>
-void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
-{
-	global uchar* pixel = (global uchar*)(line + x);
-
-	pixel[0] = b;	//blue
-	pixel[1] = g;	//green
-	pixel[2] = r;	//red
-	pixel[3] = 255;	//alpha
-}
-
-bool intersectBBox(float4 rayStart, float4 rayDirection, float4 bboxMin, float4 bboxMax, float* tmin, float* tmax)
-{
-	float t0 = FLT_MIN;
-	float t1 = FLT_MAX;
-	
-	float invRayDir = 1.0f / rayDirection.S0;
-	float tNear = (bboxMin.S0 - rayStart.S0) * invRayDir;
-	float  tFar = (bboxMax.S0 - rayStart.S0) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-				
-	invRayDir = 1.0f / rayDirection.S1;
-	tNear = (bboxMin.S1 - rayStart.S1) * invRayDir;
-	tFar = (bboxMax.S1 - rayStart.S1) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	invRayDir = 1.0f / rayDirection.S2;
-	tNear = (bboxMin.S2 - rayStart.S2) * invRayDir;
-	tFar = (bboxMax.S2 - rayStart.S2) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	*tmin = t0;
-	*tmax = t1;
-
-	return true;
-}
-
-short getVolumeValue(float x, float y, float z, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax, short cut){
-
-	if(x &lt; boxmin.S0 + 1 || x &gt; boxmax.S0 - 1 ||
-	   y &lt; boxmin.S1 + 1 || y &gt; boxmax.S1 - 1 ||
-	   z &lt; boxmin.S2 + 1 || z &gt; boxmax.S2 - 1 ||
-	   x &gt;= blocksize || x &lt; 0 ||
-	   y &gt;= blocksize || y &lt; 0 ||
-	   z &gt;= blocksize || z &lt; 0){
-	   return 0;
-	}
-
-	if(cut == 1 &amp;&amp; (volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &gt; colormin
-					&amp;&amp; volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &lt; colormax)){
-					return 0;
-	}
-
-	return volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)];	
-}
-
-
-float4 calculateGradient(float4 position,global short* volume, int blocksize, int gradient_type,float4 boxmin, float4 boxmax,short colormin, short colormax,short cut){	
-	
-	float gradientX = 0;
-	float gradientY = 0;
-	float gradientZ = 0;
-
-	if(gradient_type == 0)
-	{
-		//Central Difference Operator:
-		gradientX = getVolumeValue(position.s0 + 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0 - 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientY = getVolumeValue(position.s0, position.s1 + 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1 - 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientZ = getVolumeValue(position.s0, position.s1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);		  
-	}
-	else if(gradient_type == 1)
-	{
-		const float k1 = 0.577350269; // = sqrt(3)/3
-		const float k2 = 0.707106781; // = sqrt(2)/2
-	
-		//Zucker-Hummel Operator:
-		gradientX = (getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k1 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-	
-		gradientY = (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));		
-	
-		gradientZ = (getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-
-	}else if(gradient_type == 2){
-		//Sobel-3D operator
-		gradientX = -1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					6 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientY = 1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					6  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientZ = -1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)];
-
-					gradientX *= 1;
-					gradientY *= -1;
-					gradientZ *= -1;
-	}
-	return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
-}
-
-float4 getColor(float4 pos, float4 norm, float4 lightPosition,global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax)
-{
-	float value = getVolumeValue(pos.s0,pos.s1,pos.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,0);
-	
-	float4 color;
-	if(value &gt; colormin &amp;&amp; value &lt; colormax){
-		color=(float4)(1,0.5,0.5,0);
-	}else{
-		color=(float4)(1,1,1,0);
-	}
-
-	float4 livec = fast_normalize(lightPosition -  pos);
-	float illum = dot(livec,norm);
-	bool haslight = false;
-
-	if(illum &gt; 0)
-	{
-		return illum * color;		
-		haslight = true;
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 traceRay(float4 raySource, 
-				float4 rayDirection, 
-				global short* volume, 
-				int blocksize, 
-				float4 lightPosition,
-				float4 boxmin,
-				float4 boxmax,
-				int gradient_type,
-				short colormin,
-				short colormax,
-				short cut){
-		
-	float tmin = 0;
-	float tmax = 0;
-	
-	if(!intersectBBox(raySource, 
-					  rayDirection,
-					  boxmin, 
-					  boxmax, 
-					  &amp;tmin, 
-					  &amp;tmax))
-	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
-	}
-	
-	float4 actualPoint;
-	const float bigstep = 5;
-	const float smallstep = 0.5;
-
-	for(float t=tmin;t&lt;tmax;t+=bigstep)
-	{
-		actualPoint = raySource + t * rayDirection;		
-		if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-		{
-				for(float u=t-bigstep;u&lt;tmax;u+=smallstep)
-				{																								  					
-					actualPoint = raySource + u * rayDirection;
-					if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-					{
-						float4 gradient = calculateGradient(actualPoint,volume,blocksize,gradient_type,boxmin,boxmax,colormin,colormax,cut);
-						float4 color = getColor(actualPoint, gradient, lightPosition, volume, blocksize,boxmin,boxmax,colormin,colormax);
-						return (float4)(color.s0, color.S1, color.S2, 0);												
-					}
-				}
-		}		
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 getRayDirection(int width, int height, int x, int y, float4 forward, float4 right, float4 up)
-{
-	float ratio = (float)width / height;
-	float recenteredX = (x - (width/2)) / (2.0f * width) * ratio;
-	float recenteredY = (y - (height/2)) / (2.0f * height) ;
-	return fast_normalize(forward + (recenteredX * right) + (recenteredY * up));
-}
- 
-kernel void RayCaster (int width, 
-                       int height, 
-					   global uchar* pOutput, 
-					   int outputStride, 
-					   float4 cameraPosition, 
-					   float4 cameraForward, 
-					   float4 cameraRight, 
-					   float4 cameraUp, 
-					   global short* volume, 
-					   int blocksize,
-					   float4 lightPosition,
-					   float4 boxmin,
-					   float4 boxmax,
-					   int gradient_type,
-					   short colormin,
-					   short colormax,
-					   short cut)
-{
-	size_t x = get_global_id(0);
-	size_t y = get_global_id(1);	
-	global uchar4* pO = (global uchar4*)(pOutput+y*outputStride);
-	float4 rayDirection = getRayDirection(width, height, x, y, cameraForward, cameraRight, cameraUp);
-	float4 color = traceRay(cameraPosition, 
-							rayDirection, 
-							volume, 
-							blocksize, 
-							lightPosition,
-							boxmin,
-							boxmax,
-							gradient_type,
-							colormin,
-							colormax,
-							cut);
-	setPixel(pO, x, (int)(color.s0 &gt; 1 ? 255 : color.s0 * 255), 
-					(int)(color.s1 &gt; 1 ? 255 : color.s1 * 255), 
-					(int)(color.s2 &gt; 1 ? 255 : color.s2 * 255));
-}
-</Source><Platform>NVIDIA CUDA</Platform><Device>GeForce 9800 GTX/9800 GTX+</Device><DriverVersion>301.42</DriverVersion><BinaryName>st0d4cgb.buk</BinaryName></MetaFile><MetaFile><Source>
-void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
-{
-	global uchar* pixel = (global uchar*)(line + x);
-
-	pixel[0] = b;	//blue
-	pixel[1] = g;	//green
-	pixel[2] = r;	//red
-	pixel[3] = 255;	//alpha
-}
-
-bool intersectBBox(float4 rayStart, float4 rayDirection, float4 bboxMin, float4 bboxMax, float* tmin, float* tmax)
-{
-	float t0 = FLT_MIN;
-	float t1 = FLT_MAX;
-	
-	float invRayDir = 1.0f / rayDirection.S0;
-	float tNear = (bboxMin.S0 - rayStart.S0) * invRayDir;
-	float  tFar = (bboxMax.S0 - rayStart.S0) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-				
-	invRayDir = 1.0f / rayDirection.S1;
-	tNear = (bboxMin.S1 - rayStart.S1) * invRayDir;
-	tFar = (bboxMax.S1 - rayStart.S1) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	invRayDir = 1.0f / rayDirection.S2;
-	tNear = (bboxMin.S2 - rayStart.S2) * invRayDir;
-	tFar = (bboxMax.S2 - rayStart.S2) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	*tmin = t0;
-	*tmax = t1;
-
-	return true;
-}
-
-short getVolumeValue(float x, float y, float z, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax, short cut){
-
-	if(x &lt; boxmin.S0 + 1 || x &gt; boxmax.S0 - 1 ||
-	   y &lt; boxmin.S1 + 1 || y &gt; boxmax.S1 - 1 ||
-	   z &lt; boxmin.S2 + 1 || z &gt; boxmax.S2 - 1 ||
-	   x &gt;= blocksize || x &lt; 0 ||
-	   y &gt;= blocksize || y &lt; 0 ||
-	   z &gt;= blocksize || z &lt; 0){
-	   return 0;
-	}
-
-	if(cut == 1 &amp;&amp; (volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &gt; colormin
-					&amp;&amp; volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &lt; colormax)){
-					return 0;
-	}
-
-	return volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)];	
-}
-
-
-float4 calculateGradient(float4 position,global short* volume, int blocksize, int gradient_type,float4 boxmin, float4 boxmax,short colormin, short colormax,short cut){	
-	
-	float gradientX = 0;
-	float gradientY = 0;
-	float gradientZ = 0;
-
-	if(gradient_type == 0)
-	{
-		//Central Difference Operator:
-		gradientX = getVolumeValue(position.s0 + 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0 - 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientY = getVolumeValue(position.s0, position.s1 + 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1 - 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientZ = getVolumeValue(position.s0, position.s1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-		            getVolumeValue(position.s0, position.s1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);		  
-	}
-	else if(gradient_type == 1)
-	{
-		const float k1 = 0.577350269; // = sqrt(3)/3
-		const float k2 = 0.707106781; // = sqrt(2)/2
-	
-		//Zucker-Hummel Operator:
-		gradientX = (getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k1 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-							(getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-	
-		gradientY = (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 0,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));		
-	
-		gradientZ = (getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-					 getVolumeValue(position.s0 + 0, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-						   k1 * 
-						   (getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut)) +
-							k2 * 
-						   (getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 + 0, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 0, position.s1 - 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - 
-							getVolumeValue(position.s0 - 0, position.s1 - 1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 + 1, position.s1 + 1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 + 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) +
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) -
-							getVolumeValue(position.s0 - 1, position.s1 + 0, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut));
-
-	}else if(gradient_type == 2){
-		//Sobel-3D operator
-		gradientX = -1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					6 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					3 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					1 * volume[((int)position.s0 + 1 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientY = 1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 -1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					6  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 +1 + 0 + 1) * blocksize + ((int)position.s2 + 0)];
-
-		gradientZ = -1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 - 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 - 1)] +
-
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					-6 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0)] +
-					0  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0)] +
-
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-3 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					-1 * volume[((int)position.s0 - 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					0  * volume[((int)position.s0 + 0) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1 * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 - 1) * blocksize + ((int)position.s2 + 0 + 1)] +
-					3  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 0) * blocksize + ((int)position.s2 + 0 + 1)] +
-					1  * volume[((int)position.s0 + 1) * blocksize * blocksize + ((int)position.s1 + 0 + 1) * blocksize + ((int)position.s2 + 0 + 1)];
-
-					gradientX *= 1;
-					gradientY *= -1;
-					gradientZ *= -1;
-	}
-	return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
-}
-
-float4 getColor(float4 pos, float4 norm, float4 lightPosition,global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax)
-{
-	float value = getVolumeValue(pos.s0,pos.s1,pos.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,0);
-	
-	float4 color;
-	if(value &gt; colormin &amp;&amp; value &lt; colormax){
-		color=(float4)(1,0.5,0.5,0);
-	}else{
-		color=(float4)(1,1,1,0);
-	}
-
-	float4 livec = fast_normalize(lightPosition -  pos);
-	float illum = dot(livec,norm);
-	bool haslight = false;
-
-	if(illum &gt; 0)
-	{
-		return illum * color;		
-		haslight = true;
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 traceRay(float4 raySource, 
-				float4 rayDirection, 
-				global short* volume, 
-				int blocksize, 
-				float4 lightPosition,
-				float4 boxmin,
-				float4 boxmax,
-				int gradient_type,
-				short colormin,
-				short colormax,
-				short cut){
-		
-	float tmin = 0;
-	float tmax = 0;
-	
-	if(!intersectBBox(raySource, 
-					  rayDirection,
-					  boxmin, 
-					  boxmax, 
-					  &amp;tmin, 
-					  &amp;tmax))
-	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
-	}
-	
-	float4 actualPoint;
-	const float bigstep = 5;
-	const float smallstep = 0.5;
-
-	for(float t=tmin;t&lt;tmax;t+=bigstep)
-	{
-		actualPoint = raySource + t * rayDirection;		
-		if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-		{
-				for(float u=t-bigstep;u&lt;tmax;u+=smallstep)
-				{																								  					
-					actualPoint = raySource + u * rayDirection;
-					if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-					{
-						float4 gradient = calculateGradient(actualPoint,volume,blocksize,gradient_type,boxmin,boxmax,colormin,colormax,cut);
-						float4 color = getColor(actualPoint, gradient, lightPosition, volume, blocksize,boxmin,boxmax,colormin,colormax);
-						return (float4)(color.s0, color.S1, color.S2, 0);												
-					}
-				}
-		}		
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 getRayDirection(int width, int height, int x, int y, float4 forward, float4 right, float4 up)
-{
-	float ratio = (float)width / height;
-	float recenteredX = (x - (width/2)) / (2.0f * width) * ratio;
-	float recenteredY = (y - (height/2)) / (2.0f * height) ;
-	return fast_normalize(forward + (recenteredX * right) + (recenteredY * up));
-}
- 
-kernel void RayCaster (int width, 
-                       int height, 
-					   global uchar* pOutput, 
-					   int outputStride, 
-					   float4 cameraPosition, 
-					   float4 cameraForward, 
-					   float4 cameraRight, 
-					   float4 cameraUp, 
-					   global short* volume, 
-					   int blocksize,
-					   float4 lightPosition,
-					   float4 boxmin,
-					   float4 boxmax,
-					   int gradient_type,
-					   short colormin,
-					   short colormax,
-					   short cut)
-{
-	size_t x = get_global_id(0);
-	size_t y = get_global_id(1);	
-	global uchar4* pO = (global uchar4*)(pOutput+y*outputStride);
-	float4 rayDirection = getRayDirection(width, height, x, y, cameraForward, cameraRight, cameraUp);
-	float4 color = traceRay(cameraPosition, 
-							rayDirection, 
-							volume, 
-							blocksize, 
-							lightPosition,
-							boxmin,
-							boxmax,
-							gradient_type,
-							colormin,
-							colormax,
-							cut);
-	setPixel(pO, x, (int)(color.s0 &gt; 1 ? 255 : color.s0 * 255), 
-					(int)(color.s1 &gt; 1 ? 255 : color.s1 * 255), 
-					(int)(color.s2 &gt; 1 ? 255 : color.s2 * 255));
-}
-</Source><Platform>NVIDIA CUDA</Platform><Device>GeForce 9800 GTX/9800 GTX+</Device><DriverVersion>301.42</DriverVersion><BinaryName>wllx0dzx.5rz</BinaryName></MetaFile><MetaFile><Source>
-void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
-{
-	global uchar* pixel = (global uchar*)(line + x);
-
-	pixel[0] = b;	// BGRA
-	pixel[1] = g;	
-	pixel[2] = r;	
-	pixel[3] = 255;	
-}
-
-bool intersectBBox(float4 rayStart, float4 rayDirection, float4 bboxMin, float4 bboxMax, float* tmin, float* tmax)
-{
-	float t0 = FLT_MIN;
-	float t1 = FLT_MAX;
-	
-	float invRayDir = 1.0f / rayDirection.S0;
-	float tNear = (bboxMin.S0 - rayStart.S0) * invRayDir;
-	float  tFar = (bboxMax.S0 - rayStart.S0) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-				
-	invRayDir = 1.0f / rayDirection.S1;
-	tNear = (bboxMin.S1 - rayStart.S1) * invRayDir;
-	tFar = (bboxMax.S1 - rayStart.S1) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	invRayDir = 1.0f / rayDirection.S2;
-	tNear = (bboxMin.S2 - rayStart.S2) * invRayDir;
-	tFar = (bboxMax.S2 - rayStart.S2) * invRayDir;
-	
-	if (tNear &gt; tFar)
-	{
-		invRayDir = tFar;
-		tFar = tNear;
-		tNear = invRayDir;
-	}
-	t0 = tNear &gt; t0 ? tNear : t0;
-	t1 = tFar &lt; t1 ? tFar : t1;
-	if (t0 &gt; t1)
-		return false;
-
-	*tmin = t0;
-	*tmax = t1;
-
-	return true;
-}
-
-short getVolumeValue(float x, float y, float z, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax, short cut){
-
-	if(x &lt; boxmin.S0 + 1 || x &gt; boxmax.S0 - 1 ||
-	   y &lt; boxmin.S1 + 1 || y &gt; boxmax.S1 - 1 ||
-	   z &lt; boxmin.S2 + 1 || z &gt; boxmax.S2 - 1 ||
-	   x &gt;= blocksize || x &lt; 0 ||
-	   y &gt;= blocksize || y &lt; 0 ||
-	   z &gt;= blocksize || z &lt; 0){
-	   return 0;
-	}
-
-	if(cut == 1 &amp;&amp; (volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &gt; colormin
-					&amp;&amp; volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)] &lt; colormax)){
-					return 0;
-	}
-
-	return volume[((int)x) * blocksize * blocksize + ((int)y) * blocksize + ((int)z)];	
-}
-
-
-float4 calculateGradient(float4 position,global short* volume, int blocksize, float4 boxmin, float4 boxmax,short colormin, short colormax,short cut){	
-	
-	float gradientX = 0;
-	float gradientY = 0;
-	float gradientZ = 0;
-
-	
-		// вычисление градиента 
-		gradientX = getVolumeValue(position.s0 + 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - getVolumeValue(position.s0 - 1, position.s1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientY = getVolumeValue(position.s0, position.s1 + 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - getVolumeValue(position.s0, position.s1 - 1, position.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-		gradientZ = getVolumeValue(position.s0, position.s1, position.s2 + 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) - getVolumeValue(position.s0, position.s1, position.s2 - 1,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);		  
-	
-	return fast_normalize((float4)(gradientX,gradientY,gradientZ,0.0f));
-}
-
-float4 getColor(float4 pos, float4 norm, float4 lightPosition, global short* volume, int blocksize,float4 boxmin, float4 boxmax,short colormin, short colormax)
-{
-	float value = getVolumeValue(pos.s0,pos.s1,pos.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,0);
-	
-	float4 color;
-	if(value &gt; colormin &amp;&amp; value &lt; colormax){
-		color=(float4)(1,0.5,0.5,0);
-	}else{
-		color=(float4)(1,1,1,0);
-	}
-
-	float4 livec = fast_normalize(lightPosition -  pos);
-	float illum = dot(livec,norm); // функция скалярного произведения
-	bool haslight = false;
-
-	if(illum &gt; 0)
-	{
-		return illum * color;		
-		haslight = true;
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 traceRay(float4 raySource, 
-				float4 rayDirection, 
-				global short* volume, 
-				int blocksize, 
-				float4 lightPosition,
-				float4 boxmin,
-				float4 boxmax,
-				short colormin,
-				short colormax,
-				short cut){
-		
-	float tmin = 0;
-	float tmax = 0;
-	
-	if(!intersectBBox(raySource, 
-					  rayDirection,
-					  boxmin, 
-					  boxmax, 
-					  &amp;tmin, 
-					  &amp;tmax))
-	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
-	}
-	
-	float4 actualPoint;
-	const float bigstep = 5;
-	const float smallstep = 0.5;
-
-	for(float t=tmin;t&lt;tmax;t+=bigstep)
-	{
-		actualPoint = raySource + t * rayDirection;		
-		if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-		{
-				for(float u=t-bigstep;u&lt;tmax;u+=smallstep)
-				{																								  					
-					actualPoint = raySource + u * rayDirection;
-					if(getVolumeValue(actualPoint.s0,actualPoint.s1,actualPoint.s2,volume,blocksize,boxmin,boxmax,colormin,colormax,cut) != 0)
-					{
-						float4 gradient = calculateGradient(actualPoint,volume,blocksize,boxmin,boxmax,colormin,colormax,cut);
-						float4 color = getColor(actualPoint, gradient, lightPosition, volume, blocksize,boxmin,boxmax,colormin,colormax);
-						return (float4)(color.s0, color.S1, color.S2, 0);												
-					}
-				}
-		}		
-	}
-	return (float4)(0.0f,0.0f,0.0f,0.0f);
-}
-
-float4 getRayDirection(int width, int height, int x, int y, float4 forward, float4 right, float4 up)
-{
-	float ratio = (float)width / height;
-	float recenteredX = (x - (width/2)) / (2.0f * width) * ratio;
-	float recenteredY = (y - (height/2)) / (2.0f * height) ;
-	return fast_normalize(forward + (recenteredX * right) + (recenteredY * up));
-}
- 
-kernel void RayCaster (int width, 
-                       int height, 
-					   global uchar* pOutput, 
-					   int outputStride, 
-					   float4 cameraPosition, 
-					   float4 cameraForward, 
-					   float4 cameraRight, 
-					   float4 cameraUp, 
-					   global short* volume, 
-					   int blocksize,
-					   float4 lightPosition,
-					   float4 boxmin,
-					   float4 boxmax,
-					   short colormin,
-					   short colormax,
-					   short cut)
-{
-	size_t x = get_global_id(0);
-	size_t y = get_global_id(1);	
-	global uchar4* pO = (global uchar4*)(pOutput+y*outputStride);
-	float4 rayDirection = getRayDirection(width, height, x, y, cameraForward, cameraRight, cameraUp);
-	float4 color = traceRay(cameraPosition, 
-							rayDirection, 
-							volume, 
-							blocksize, 
-							lightPosition,
-							boxmin,
-							boxmax,
-							colormin,
-							colormax,
-							cut);
-	setPixel(pO, x, (int)(color.s0 &gt; 1 ? 255 : color.s0 * 255), 
-					(int)(color.s1 &gt; 1 ? 255 : color.s1 * 255), 
-					(int)(color.s2 &gt; 1 ? 255 : color.s2 * 255));
-}
-</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>267.54</DriverVersion><BinaryName>ousn52oy.wif</BinaryName></MetaFile><MetaFile><Source>
-void setPixel(global uchar4* line, size_t x, uchar r, uchar g, uchar b)
-{
-	global uchar* pixel = (global uchar*)(line + x);
-
 	pixel[0] = b;	// BGRA
 	pixel[1] = g;	
 	pixel[2] = r;	
@@ -25633,4 +24283,1988 @@ kernel void DVR(
 
 
 
-</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>267.54</DriverVersion><BinaryName>czvxehey.2k2</BinaryName></MetaFile></MetaFiles></BinaryMetaInfo>
+</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>267.54</DriverVersion><BinaryName>czvxehey.2k2</BinaryName></MetaFile><MetaFile><Source>#ifdef CPU_DEVICE
+	#define CL_POW pow
+#else
+	#define CL_POW native_powr
+#endif
+
+
+
+// начало вспомогательных функций----------------------------------------
+
+// нахождение значения вокселя в объеме
+short valexist(float x, float y, float z,global short* volume, int size, float4 boxMinCon, float4 boxMaxCon, short winMin, short winMax, short carve , short interpolation , short  winMin2, short  winMax2)
+{
+
+  // если координаты выходят за область просмотра (бокс), то отсечь их
+   
+	if(x &lt; boxMinCon.S0+1 ||
+       x &gt; boxMaxCon.S0-1 ||
+	   y &lt; boxMinCon.S1+1 ||
+	   y &gt; boxMaxCon.S1-1 ||
+	   z &lt; boxMinCon.S2+1 ||
+	   z &gt; boxMaxCon.S2-1 ||
+	   x&gt;=size || x&lt;0 ||
+	   y&gt;=size || y&lt;0 ||
+	   z&gt;=size || z&lt;0 )
+	   
+		return 0;
+
+
+	if(interpolation==0)
+	{
+
+		// отсекаем ненужные воксели в зависимости от окна просмотра 
+		if(carve == 1 &amp;&amp; (( volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax) || (volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin2 &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax2) ) )
+					{
+						return 0;
+					}
+	
+		return volume[((int)x) * size * size + ((int)y) * size + ((int)z)];	
+
+	}
+
+	if(interpolation==1)
+	{
+		float xd = (x-(x-1)) / ((x+1)-(x-1));
+		float yd = (y-(y-1)) / ((y+1)-(y-1));
+		float zd = (z-(z-1)) / ((z+1)-(z-1));
+	
+		short C00 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*xd;
+		short C10 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*xd;
+		short C01 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*xd;
+		short C11 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*xd;
+
+		short C0 = C00*(1-yd) + C10*yd;
+		short C1 = C01*(1-yd) + C11*yd;
+		short C = C0*(1-zd) + C1*zd;
+
+		if(carve == 1 &amp;&amp; ((C &gt; winMin  &amp;&amp; C &lt; winMax) || (C &gt; winMin2  &amp;&amp; C &lt; winMax2)) )
+				{
+					return 0;
+				}
+
+		return C;
+
+
+	}
+	
+}
+
+
+// вычисляет нормаль для вокселя
+float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon, float4  boxMaxCon, short  winMin, short  winMax, short  carve, short interpolation, short  winMin2, short  winMax2)
+{
+
+	
+	float Gx = valexist(pos.s0 + 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0 - 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+	float Gy = valexist(pos.s0, pos.s1 + 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1 - 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+    float Gz = valexist(pos.s0, pos.s1, pos.s2 + 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1, pos.s2 - 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);		  
+	
+	return fast_normalize((float4)(Gx,Gy,Gz,0.0f));
+	
+	
+}
+
+float4  UIntToColor(uint color)
+{        
+
+            uchar G;
+            uchar B;
+            uchar R;
+            uchar A;
+
+            uint colorX;
+            uint res32;
+            uint res24;
+            uint res16;
+
+			float4 Col; 
+
+            uint two_in_24_max = (1 &lt;&lt; 24) - 1; 
+            ushort two_in_16_max = (1 &lt;&lt; 16) - 1; 
+
+            if (color &gt; two_in_24_max)
+            {
+
+                G = (uchar)(color &gt;&gt; 24); 
+                
+                colorX = color &gt;&gt; 24;
+                res32 = colorX &lt;&lt; 24;
+                color -= res32;
+
+            }
+            else
+            {
+                G = 0;
+               
+            }
+            if (color &gt; two_in_16_max)
+            {
+                B = (uchar)(color &gt;&gt; 16);
+                
+                colorX = color &gt;&gt; 16;
+                res24 = colorX &lt;&lt; 16;
+                color -= res24;
+            }
+            else
+            {
+                B = 0;
+                
+            }
+            if (color &gt; 255)
+            {
+                R = (uchar)(color &gt;&gt; 8);
+                
+                colorX = color &gt;&gt; 8;
+                res16 = colorX &lt;&lt; 8;
+                color -= res16;
+            }
+            else
+            {
+                R = 0;
+                A = (uchar)(color);
+				Col.S0 = (float)(G/255.0f);
+                Col.S1 = (float)(B/255.0f);
+                Col.S2 = (float)(R/255.0f);
+                Col.S3 = (float)(A/255.0f);
+                return Col; 
+            }
+            A = (uchar)color;
+            Col.S0 = (float)(G/255.0f);
+            Col.S1 = (float)(B/255.0f);
+            Col.S2 = (float)(R/255.0f);
+            Col.S3 = (float)(A/255.0f);
+
+            return Col; 
+
+}
+
+
+
+float4 GetLightning(
+
+ float4 pos,
+ float4 precision,
+ float4 normal,
+ float4  light,
+ global short* volume,
+ int size,
+ float4 boxMinCon,
+ float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float ka,
+ float kd,
+ float ks,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+
+{
+	short vox_HU = valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, 0, interpolation, winMin2, winMax2);
+	float4 col;
+	uchar ctr=0;
+	float factor;
+    unsigned short hupix;  
+	uchar rgba256=0;
+	float4 li;
+    float ill;
+	float4 reflect; 
+	float4 viewpoint = fast_normalize(pos);
+	float4 It,Ia,Id,Is;
+	int newMax = (winCentre+0.5*winWidth);
+	int newMin = (newMax - winWidth);
+    newMax-=32768;
+	newMin;
+	
+	
+	if((vox_HU&gt; winMin &amp;&amp; vox_HU &lt; winMax) || (vox_HU&gt; winMin2 &amp;&amp; vox_HU &lt; winMax2)) // проверка, попадает ли воксель в окно отсечения
+	{
+		col = (float4)(1.0f,0.0f,0.0f,1.0f); // GBRA
+	}
+	else
+	{
+		if(tf==0)
+		{
+			col =(float4)(1.0f,1.0f,1.0f,1.0f); 
+		}
+		else
+		{
+			 
+			factor = (float)(255.0f/(float)(winWidth));
+			hupix = (unsigned short)(vox_HU+32768);
+			rgba256 = (uchar)((hupix - newMin) * factor);
+			col = (float4)(UIntToColor(colors[rgba256]));
+		}
+	}
+
+	
+	
+	li = fast_normalize(light-precision); // от текущего вокселя к источнику света
+	ill = dot(li,normal); 
+	
+	
+
+	if(ill&gt;0)
+	{
+		
+		float4 light_dist = (light-precision);
+		float dist=sqrt(light_dist.s0*light_dist.s0+light_dist.s1*light_dist.s1+light_dist.s2*light_dist.s2+light_dist.s3*light_dist.s3);
+		float att=(1/(kc+kl*dist+kq*dist*dist));
+
+		Ia=col*(1.0, 0.0 , 1.0 , 1.0 );  // общий свет   GBRA
+		Id=ill*col; // диффузный свет
+
+		reflect=(2.0*ill*normal-li);
+		reflect=fast_normalize(reflect);
+
+		Is=CL_POW(dot(viewpoint,reflect),exp)*(0.0,0.0,1.0,1.0); // зеркальное отражение
+		It=ka*Ia+att*(kd*Id+ks*Is); // суммарный свет
+
+		return It; // 
+
+	}
+	return (float4)(0.0f,0.0f,0.0f,1.0f);
+}
+
+
+bool intersect(float4 pos, float4 direction, float4 boxMinCon, float4 boxMaxCon, float* kmin, float* kmax)
+{
+	float t0 = FLT_MIN;
+	float t1 = FLT_MAX;
+	
+	float inDirection = 1.0f / direction.S0; // x
+	float tmin = (boxMinCon.S0 - pos.S0) * inDirection;
+	float tmax =(boxMaxCon.S0 - pos.S0) * inDirection;
+
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+				
+	inDirection = 1.0f / direction.S1;  // y
+	tmin = (boxMinCon.S1 - pos.S1) * inDirection;
+	tmax = (boxMaxCon.S1 - pos.S1) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+
+	inDirection = 1.0f / direction.S2; // z
+	tmin = (boxMinCon.S2 - pos.S2) * inDirection;
+	tmax = (boxMaxCon.S2 - pos.S2) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+
+	if (t0 &gt; t1)
+		return false;
+
+	*kmin = t0;
+	*kmax = t1;
+
+	return true;
+	
+}
+
+
+
+// пускает луч в наш объем и вычисляет значение *интерполируемого* вокселя
+float4 TraceRayandGetPixelColor
+(
+ float4 pos,
+ float4 direction, 
+ global short* volume,
+ int size,
+ float4 light,
+ float4 boxMinCon, float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short carve,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float kamb,
+ float kdiff,
+ float kspec,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+ 
+{
+
+	float kmin=0;
+	float kmax=0;
+	
+	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
+	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &amp;kmin,&amp;kmax) )
+	{
+		return (float4)(0.0f,0.0f,0.0f,0.0f);
+	}
+
+	const float step=5;
+	const float minst=0.1;
+	float4 precision;
+
+	// если луч достигает бокса, то интерполируем значение и вычисляем цвет
+	for(float k=kmin; k&lt;kmax; k+=step)
+	{
+		precision=pos+k*direction;
+
+		if(valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+		{
+			
+			//Проход луча
+			for(float t=k-5; t&lt;kmax; t+=minst)
+			{
+			
+				precision=pos+t*direction;
+				if(valexist(precision.S0,precision.S1,precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+				{
+					// поскольку воксель, это тот же пиксель, только в 3D пространстве, у него нет нормали, она заменяется градиентом
+					float4 normal = GetGradient(precision, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+					// расчет цвета пикселя, эмуляция модели освещения
+					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+					
+					
+					return (float4)(truecolor.s0, truecolor.S1, truecolor.S2, truecolor.S3);
+				}
+			
+			}
+		}
+		
+	}
+	
+	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+}
+
+
+
+// Вычисляет направление луча
+float4 GetDirection(int w, int h, int x, int y, float4 n, float4 right, float4 up)
+{
+	float aspect = (float) h/w; // поправочный коэффициент для проецирования 
+
+	float rx = (x-(w/2)) / (2.0f*w)*aspect;
+	float ry = (y-(h/2)) / (2.0f*h);
+
+	return fast_normalize( n+(rx*right)+(ry*up) );
+
+}
+
+
+void AttachPixel(global uchar4* line, size_t x,  uchar g, uchar b, uchar r, uchar a)
+{
+	global uchar* pix = (global uchar*)(line+x);
+
+	// BGRA
+	pix[0] = b; 	
+	pix[1] = g;
+	pix[2] = r;
+	pix[3] = a;	 // прозрачность 
+	
+}
+
+
+// конец вспомогательных функций----------------------------------------
+
+// функция, которая будет выполнятся kernel
+kernel void DVR(
+		    int W,
+		    int H,
+			global uchar* out,
+		    int offset,
+		    float4 pos,
+		    float4 n, // forward
+		    float4 right,
+ 		    float4 up,
+		    global short* volume, 
+		    int size,
+		    float4 light,
+		    float4 boxMinCon,
+	 	    float4 boxMaxCon,
+		    short winMin,
+	 	    short winMax,
+		    short carve,
+			short interpolation,
+			short tf,
+			global uint* colors,
+			int winWidth,
+			int winCentre,
+			int knots,
+			short winMin2,
+	 	    short winMax2,
+			global uchar* opacity,
+			float kamb,
+			float kdiff,
+			float kspec,
+			float exp,
+			float kc,
+			float kl,
+			float kq,
+			global ulong* voxelCounter) 
+{
+	// берем глобальный идентификатор work_item'a
+	size_t x=get_global_id(0);
+	size_t y=get_global_id(1);
+	
+	
+	// вычисляем стрку, в которой будут окрашены пиксели
+	global uchar4* line = (global uchar4*)(out+y*offset);
+
+	// вычисляем направление луча
+	float4 direction = GetDirection(W,H,x,y,n,right,up);
+
+	// пускаем луч
+	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+
+	// устанавливаем пиксель полученного цвета
+    
+    
+	AttachPixel(line, x,  (int)(col.s0 &gt; 1 ? 255 : col.s0 * 255), // G
+					      (int)(col.s1 &gt; 1 ? 255 : col.s1 * 255), // B
+					      (int)(col.s2 &gt; 1 ? 255 : col.s2 * 255), // R
+						  (int)(col.s3 &gt; 1 ? 255 : col.s3 * 255));// A
+						  // GBRA - мой формат.   BGRA - Microsoft
+
+
+
+}							
+
+
+
+</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>301.42</DriverVersion><BinaryName>khn3zigu.hui</BinaryName></MetaFile><MetaFile><Source>#ifdef CPU_DEVICE
+	#define CL_POW pow
+#else
+	#define CL_POW native_powr
+#endif
+
+
+
+// начало вспомогательных функций----------------------------------------
+
+// нахождение значения вокселя в объеме
+short valexist(float x, float y, float z,global short* volume, int size, float4 boxMinCon, float4 boxMaxCon, short winMin, short winMax, short carve , short interpolation , short  winMin2, short  winMax2)
+{
+
+  // если координаты выходят за область просмотра (бокс), то отсечь их
+   
+	if(x &lt; boxMinCon.S0+1 ||
+       x &gt; boxMaxCon.S0-1 ||
+	   y &lt; boxMinCon.S1+1 ||
+	   y &gt; boxMaxCon.S1-1 ||
+	   z &lt; boxMinCon.S2+1 ||
+	   z &gt; boxMaxCon.S2-1 ||
+	   x&gt;=size || x&lt;0 ||
+	   y&gt;=size || y&lt;0 ||
+	   z&gt;=size || z&lt;0 )
+	   
+		return 0;
+
+
+	if(interpolation==0)
+	{
+
+		// отсекаем ненужные воксели в зависимости от окна просмотра 
+		if(carve == 1 &amp;&amp; (( volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax) || (volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin2 &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax2) ) )
+					{
+						return 0;
+					}
+	
+		return volume[((int)x) * size * size + ((int)y) * size + ((int)z)];	
+
+	}
+
+	if(interpolation==1)
+	{
+		float xd = (x-(x-1)) / ((x+1)-(x-1));
+		float yd = (y-(y-1)) / ((y+1)-(y-1));
+		float zd = (z-(z-1)) / ((z+1)-(z-1));
+	
+		short C00 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*xd;
+		short C10 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*xd;
+		short C01 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*xd;
+		short C11 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*xd;
+
+		short C0 = C00*(1-yd) + C10*yd;
+		short C1 = C01*(1-yd) + C11*yd;
+		short C = C0*(1-zd) + C1*zd;
+
+		if(carve == 1 &amp;&amp; ((C &gt; winMin  &amp;&amp; C &lt; winMax) || (C &gt; winMin2  &amp;&amp; C &lt; winMax2)) )
+				{
+					return 0;
+				}
+
+		return C;
+
+
+	}
+	
+}
+
+
+// вычисляет нормаль для вокселя
+float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon, float4  boxMaxCon, short  winMin, short  winMax, short  carve, short interpolation, short  winMin2, short  winMax2)
+{
+
+	
+	float Gx = valexist(pos.s0 + 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0 - 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+	float Gy = valexist(pos.s0, pos.s1 + 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1 - 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+    float Gz = valexist(pos.s0, pos.s1, pos.s2 + 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1, pos.s2 - 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);		  
+	
+	return fast_normalize((float4)(Gx,Gy,Gz,0.0f));
+	
+	
+}
+
+float4  UIntToColor(uint color)
+{        
+
+            uchar G;
+            uchar B;
+            uchar R;
+            uchar A;
+
+            uint colorX;
+            uint res32;
+            uint res24;
+            uint res16;
+
+			float4 Col; 
+
+            uint two_in_24_max = (1 &lt;&lt; 24) - 1; 
+            ushort two_in_16_max = (1 &lt;&lt; 16) - 1; 
+
+            if (color &gt; two_in_24_max)
+            {
+
+                G = (uchar)(color &gt;&gt; 24); 
+                
+                colorX = color &gt;&gt; 24;
+                res32 = colorX &lt;&lt; 24;
+                color -= res32;
+
+            }
+            else
+            {
+                G = 0;
+               
+            }
+            if (color &gt; two_in_16_max)
+            {
+                B = (uchar)(color &gt;&gt; 16);
+                
+                colorX = color &gt;&gt; 16;
+                res24 = colorX &lt;&lt; 16;
+                color -= res24;
+            }
+            else
+            {
+                B = 0;
+                
+            }
+            if (color &gt; 255)
+            {
+                R = (uchar)(color &gt;&gt; 8);
+                
+                colorX = color &gt;&gt; 8;
+                res16 = colorX &lt;&lt; 8;
+                color -= res16;
+            }
+            else
+            {
+                R = 0;
+                A = (uchar)(color);
+				Col.S0 = (float)(G/255.0f);
+                Col.S1 = (float)(B/255.0f);
+                Col.S2 = (float)(R/255.0f);
+                Col.S3 = (float)(A/255.0f);
+                return Col; 
+            }
+            A = (uchar)color;
+            Col.S0 = (float)(G/255.0f);
+            Col.S1 = (float)(B/255.0f);
+            Col.S2 = (float)(R/255.0f);
+            Col.S3 = (float)(A/255.0f);
+
+            return Col; 
+
+}
+
+
+
+float4 GetLightning(
+
+ float4 pos,
+ float4 precision,
+ float4 normal,
+ float4  light,
+ global short* volume,
+ int size,
+ float4 boxMinCon,
+ float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float ka,
+ float kd,
+ float ks,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+
+{
+	short vox_HU = valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, 0, interpolation, winMin2, winMax2);
+	float4 col;
+	uchar ctr=0;
+	float factor;
+    unsigned short hupix;  
+	uchar rgba256=0;
+	float4 li;
+    float ill;
+	float4 reflect; 
+	float4 viewpoint = fast_normalize(pos);
+	float4 It,Ia,Id,Is;
+	int newMax = (winCentre+0.5*winWidth);
+	int newMin = (newMax - winWidth);
+    newMax-=32768;
+	newMin;
+	
+	
+	if((vox_HU&gt; winMin &amp;&amp; vox_HU &lt; winMax) || (vox_HU&gt; winMin2 &amp;&amp; vox_HU &lt; winMax2)) // проверка, попадает ли воксель в окно отсечения
+	{
+		col = (float4)(1.0f,0.0f,0.0f,1.0f); // GBRA
+	}
+	else
+	{
+		if(tf==0)
+		{
+			col =(float4)(1.0f,1.0f,1.0f,1.0f); 
+		}
+		else
+		{
+			 
+			factor = (float)(255.0f/(float)(winWidth));
+			hupix = (unsigned short)(vox_HU+32768);
+			rgba256 = (uchar)((hupix - newMin) * factor);
+			col = (float4)(UIntToColor(colors[rgba256]));
+		}
+	}
+
+	
+	
+	li = fast_normalize(light-precision); // от текущего вокселя к источнику света
+	ill = dot(li,normal); 
+	
+	
+
+	if(ill&gt;0)
+	{
+		
+		float4 light_dist = (light-precision);
+		float dist=sqrt(light_dist.s0*light_dist.s0+light_dist.s1*light_dist.s1+light_dist.s2*light_dist.s2+light_dist.s3*light_dist.s3);
+		float att=(1/(kc+kl*dist+kq*dist*dist));
+
+		Ia=col*(1.0, 0.0 , 1.0 , 1.0 );  // общий свет   GBRA
+		Id=ill*col; // диффузный свет
+
+		reflect=(2.0*ill*normal-li);
+		reflect=fast_normalize(reflect);
+
+		Is=CL_POW(dot(viewpoint,reflect),exp)*(0.0,0.0,1.0,1.0); // зеркальное отражение
+		It=ka*Ia+att*(kd*Id+ks*Is); // суммарный свет
+
+		return It; // 
+
+	}
+	return (float4)(0.0f,0.0f,0.0f,1.0f);
+}
+
+
+bool intersect(float4 pos, float4 direction, float4 boxMinCon, float4 boxMaxCon, float* kmin, float* kmax)
+{
+	float t0 = FLT_MIN;
+	float t1 = FLT_MAX;
+	
+	float inDirection = 1.0f / direction.S0; // x
+	float tmin = (boxMinCon.S0 - pos.S0) * inDirection;
+	float tmax =(boxMaxCon.S0 - pos.S0) * inDirection;
+
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+				
+	inDirection = 1.0f / direction.S1;  // y
+	tmin = (boxMinCon.S1 - pos.S1) * inDirection;
+	tmax = (boxMaxCon.S1 - pos.S1) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+
+	inDirection = 1.0f / direction.S2; // z
+	tmin = (boxMinCon.S2 - pos.S2) * inDirection;
+	tmax = (boxMaxCon.S2 - pos.S2) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+
+	if (t0 &gt; t1)
+		return false;
+
+	*kmin = t0;
+	*kmax = t1;
+
+	return true;
+	
+}
+
+
+
+// пускает луч в наш объем и вычисляет значение *интерполируемого* вокселя
+float4 TraceRayandGetPixelColor
+(
+ float4 pos,
+ float4 direction, 
+ global short* volume,
+ int size,
+ float4 light,
+ float4 boxMinCon, float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short carve,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float kamb,
+ float kdiff,
+ float kspec,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+ 
+{
+
+	float kmin=0;
+	float kmax=0;
+	
+	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
+	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &amp;kmin,&amp;kmax) )
+	{
+		return (float4)(0.0f,0.0f,0.0f,0.0f);
+	}
+
+	const float step=5;
+	const float minst=0.1;
+	float4 precision;
+
+	// если луч достигает бокса, то интерполируем значение и вычисляем цвет
+	for(float k=kmin; k&lt;kmax; k+=step)
+	{
+		precision=pos+k*direction;
+
+		if(valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+		{
+			
+			//Проход луча
+			for(float t=k-5; t&lt;kmax; t+=minst)
+			{
+			
+				precision=pos+t*direction;
+				if(valexist(precision.S0,precision.S1,precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+				{
+					// поскольку воксель, это тот же пиксель, только в 3D пространстве, у него нет нормали, она заменяется градиентом
+					float4 normal = GetGradient(precision, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+					// расчет цвета пикселя, эмуляция модели освещения
+					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+					
+					
+					return (float4)(truecolor.s0, truecolor.S1, truecolor.S2, truecolor.S3);
+				}
+			
+			}
+		}
+		
+	}
+	
+	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+}
+
+
+
+// Вычисляет направление луча
+float4 GetDirection(int w, int h, int x, int y, float4 n, float4 right, float4 up)
+{
+	float aspect = (float) h/w; // поправочный коэффициент для проецирования 
+
+	float rx = (x-(w/2)) / (2.0f*w)*aspect;
+	float ry = (y-(h/2)) / (2.0f*h);
+
+	return fast_normalize( n+(rx*right)+(ry*up) );
+
+}
+
+
+void AttachPixel(global uchar4* line, size_t x,  uchar g, uchar b, uchar r, uchar a)
+{
+	global uchar* pix = (global uchar*)(line+x);
+
+	// BGRA
+	pix[0] = b; 	
+	pix[1] = g;
+	pix[2] = r;
+	pix[3] = a;	 // прозрачность 
+	
+}
+
+
+// конец вспомогательных функций----------------------------------------
+
+// функция, которая будет выполнятся kernel
+kernel void DVR(
+		    int W,
+		    int H,
+			global uchar* out,
+		    int offset,
+		    float4 pos,
+		    float4 n, // forward
+		    float4 right,
+ 		    float4 up,
+		    global short* volume, 
+		    int size,
+		    float4 light,
+		    float4 boxMinCon,
+	 	    float4 boxMaxCon,
+		    short winMin,
+	 	    short winMax,
+		    short carve,
+			short interpolation,
+			short tf,
+			global uint* colors,
+			int winWidth,
+			int winCentre,
+			int knots,
+			short winMin2,
+	 	    short winMax2,
+			global uchar* opacity,
+			float kamb,
+			float kdiff,
+			float kspec,
+			float exp,
+			float kc,
+			float kl,
+			float kq,
+			global ulong* voxelCounter) 
+{
+	// берем глобальный идентификатор work_item'a
+	size_t x=get_global_id(0);
+	size_t y=get_global_id(1);
+	
+	
+	// вычисляем стрку, в которой будут окрашены пиксели
+	global uchar4* line = (global uchar4*)(out+y*offset);
+
+	// вычисляем направление луча
+	float4 direction = GetDirection(W,H,x,y,n,right,up);
+
+	// пускаем луч
+	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+
+	// устанавливаем пиксель полученного цвета
+    
+    
+	AttachPixel(line, x,  (int)(col.s0 &gt; 1 ? 255 : col.s0 * 255), // G
+					      (int)(col.s1 &gt; 1 ? 255 : col.s1 * 255), // B
+					      (int)(col.s2 &gt; 1 ? 255 : col.s2 * 255), // R
+						  (int)(col.s3 &gt; 1 ? 255 : col.s3 * 255));// A
+						  // GBRA - мой формат.   BGRA - Microsoft
+
+
+
+}							
+
+
+
+</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>301.42</DriverVersion><BinaryName>l5doh2io.nk0</BinaryName></MetaFile><MetaFile><Source>#ifdef CPU_DEVICE
+	#define CL_POW pow
+#else
+	#define CL_POW native_powr
+#endif
+
+
+
+// начало вспомогательных функций----------------------------------------
+
+// нахождение значения вокселя в объеме
+short valexist(float x, float y, float z,global short* volume, int size, float4 boxMinCon, float4 boxMaxCon, short winMin, short winMax, short carve , short interpolation , short  winMin2, short  winMax2)
+{
+
+  // если координаты выходят за область просмотра (бокс), то отсечь их
+   
+	if(x &lt; boxMinCon.S0+1 ||
+       x &gt; boxMaxCon.S0-1 ||
+	   y &lt; boxMinCon.S1+1 ||
+	   y &gt; boxMaxCon.S1-1 ||
+	   z &lt; boxMinCon.S2+1 ||
+	   z &gt; boxMaxCon.S2-1 ||
+	   x&gt;=size || x&lt;0 ||
+	   y&gt;=size || y&lt;0 ||
+	   z&gt;=size || z&lt;0 )
+	   
+		return 0;
+
+
+	if(interpolation==0)
+	{
+
+		// отсекаем ненужные воксели в зависимости от окна просмотра 
+		if(carve == 1 &amp;&amp; (( volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax) || (volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin2 &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax2) ) )
+					{
+						return 0;
+					}
+	
+		return volume[((int)x) * size * size + ((int)y) * size + ((int)z)];	
+
+	}
+
+	if(interpolation==1)
+	{
+		float xd = (x-(x-1)) / ((x+1)-(x-1));
+		float yd = (y-(y-1)) / ((y+1)-(y-1));
+		float zd = (z-(z-1)) / ((z+1)-(z-1));
+	
+		short C00 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*xd;
+		short C10 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*xd;
+		short C01 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*xd;
+		short C11 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*xd;
+
+		short C0 = C00*(1-yd) + C10*yd;
+		short C1 = C01*(1-yd) + C11*yd;
+		short C = C0*(1-zd) + C1*zd;
+
+		if(carve == 1 &amp;&amp; ((C &gt; winMin  &amp;&amp; C &lt; winMax) || (C &gt; winMin2  &amp;&amp; C &lt; winMax2)) )
+				{
+					return 0;
+				}
+
+		return C;
+
+
+	}
+	
+}
+
+
+// вычисляет нормаль для вокселя
+float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon, float4  boxMaxCon, short  winMin, short  winMax, short  carve, short interpolation, short  winMin2, short  winMax2)
+{
+
+	
+	float Gx = valexist(pos.s0 + 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0 - 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+	float Gy = valexist(pos.s0, pos.s1 + 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1 - 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+    float Gz = valexist(pos.s0, pos.s1, pos.s2 + 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1, pos.s2 - 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);		  
+	
+	return fast_normalize((float4)(Gx,Gy,Gz,0.0f));
+	
+	
+}
+
+float4  UIntToColor(uint color)
+{        
+
+            uchar G;
+            uchar B;
+            uchar R;
+            uchar A;
+
+            uint colorX;
+            uint res32;
+            uint res24;
+            uint res16;
+
+			float4 Col; 
+
+            uint two_in_24_max = (1 &lt;&lt; 24) - 1; 
+            ushort two_in_16_max = (1 &lt;&lt; 16) - 1; 
+
+            if (color &gt; two_in_24_max)
+            {
+
+                G = (uchar)(color &gt;&gt; 24); 
+                
+                colorX = color &gt;&gt; 24;
+                res32 = colorX &lt;&lt; 24;
+                color -= res32;
+
+            }
+            else
+            {
+                G = 0;
+               
+            }
+            if (color &gt; two_in_16_max)
+            {
+                B = (uchar)(color &gt;&gt; 16);
+                
+                colorX = color &gt;&gt; 16;
+                res24 = colorX &lt;&lt; 16;
+                color -= res24;
+            }
+            else
+            {
+                B = 0;
+                
+            }
+            if (color &gt; 255)
+            {
+                R = (uchar)(color &gt;&gt; 8);
+                
+                colorX = color &gt;&gt; 8;
+                res16 = colorX &lt;&lt; 8;
+                color -= res16;
+            }
+            else
+            {
+                R = 0;
+                A = (uchar)(color);
+				Col.S0 = (float)(G/255.0f);
+                Col.S1 = (float)(B/255.0f);
+                Col.S2 = (float)(R/255.0f);
+                Col.S3 = (float)(A/255.0f);
+                return Col; 
+            }
+            A = (uchar)color;
+            Col.S0 = (float)(G/255.0f);
+            Col.S1 = (float)(B/255.0f);
+            Col.S2 = (float)(R/255.0f);
+            Col.S3 = (float)(A/255.0f);
+
+            return Col; 
+
+}
+
+
+
+float4 GetLightning(
+
+ float4 pos,
+ float4 precision,
+ float4 normal,
+ float4  light,
+ global short* volume,
+ int size,
+ float4 boxMinCon,
+ float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float ka,
+ float kd,
+ float ks,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+
+{
+	short vox_HU = valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, 0, interpolation, winMin2, winMax2);
+	float4 col;
+	uchar ctr=0;
+	float factor;
+    unsigned short hupix;  
+	uchar rgba256=0;
+	float4 li;
+    float ill;
+	float4 reflect; 
+	float4 viewpoint = fast_normalize(pos);
+	float4 It,Ia,Id,Is;
+	int newMax = (winCentre+0.5*winWidth);
+	int newMin = (newMax - winWidth);
+    newMax-=32768;
+	newMin;
+	
+	
+	if((vox_HU&gt; winMin &amp;&amp; vox_HU &lt; winMax) || (vox_HU&gt; winMin2 &amp;&amp; vox_HU &lt; winMax2)) // проверка, попадает ли воксель в окно отсечения
+	{
+		col = (float4)(1.0f,0.0f,0.0f,1.0f); // GBRA
+	}
+	else
+	{
+		if(tf==0)
+		{
+			col =(float4)(1.0f,1.0f,1.0f,1.0f); 
+		}
+		else
+		{
+			 
+			factor = (float)(255.0f/(float)(winWidth));
+			hupix = (unsigned short)(vox_HU+32768);
+			rgba256 = (uchar)((hupix - newMin) * factor);
+			col = (float4)(UIntToColor(colors[rgba256]));
+		}
+	}
+
+	
+	
+	li = fast_normalize(light-precision); // от текущего вокселя к источнику света
+	ill = dot(li,normal); 
+	
+	
+
+	if(ill&gt;0)
+	{
+		
+		float4 light_dist = (light-precision);
+		float dist=sqrt(light_dist.s0*light_dist.s0+light_dist.s1*light_dist.s1+light_dist.s2*light_dist.s2+light_dist.s3*light_dist.s3);
+		float att=(1/(kc+kl*dist+kq*dist*dist));
+
+		Ia=col*(1.0, 0.0 , 1.0 , 1.0 );  // общий свет   GBRA
+		Id=ill*col; // диффузный свет
+
+		reflect=(2.0*ill*normal-li);
+		reflect=fast_normalize(reflect);
+
+		Is=CL_POW(dot(viewpoint,reflect),exp)*(0.0,0.0,1.0,1.0); // зеркальное отражение
+		It=ka*Ia+att*(kd*Id+ks*Is); // суммарный свет
+
+		return It; // 
+
+	}
+	return (float4)(0.0f,0.0f,0.0f,1.0f);
+}
+
+
+bool intersect(float4 pos, float4 direction, float4 boxMinCon, float4 boxMaxCon, float* kmin, float* kmax)
+{
+	float t0 = FLT_MIN;
+	float t1 = FLT_MAX;
+	
+	float inDirection = 1.0f / direction.S0; // x
+	float tmin = (boxMinCon.S0 - pos.S0) * inDirection;
+	float tmax =(boxMaxCon.S0 - pos.S0) * inDirection;
+
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+				
+	inDirection = 1.0f / direction.S1;  // y
+	tmin = (boxMinCon.S1 - pos.S1) * inDirection;
+	tmax = (boxMaxCon.S1 - pos.S1) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+
+	inDirection = 1.0f / direction.S2; // z
+	tmin = (boxMinCon.S2 - pos.S2) * inDirection;
+	tmax = (boxMaxCon.S2 - pos.S2) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+
+	if (t0 &gt; t1)
+		return false;
+
+	*kmin = t0;
+	*kmax = t1;
+
+	return true;
+	
+}
+
+
+
+// пускает луч в наш объем и вычисляет значение *интерполируемого* вокселя
+float4 TraceRayandGetPixelColor
+(
+ float4 pos,
+ float4 direction, 
+ global short* volume,
+ int size,
+ float4 light,
+ float4 boxMinCon, float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short carve,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float kamb,
+ float kdiff,
+ float kspec,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+ 
+{
+
+	float kmin=0;
+	float kmax=0;
+	
+	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
+	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &amp;kmin,&amp;kmax) )
+	{
+		return (float4)(0.0f,0.0f,0.0f,0.0f);
+	}
+
+	const float step=5;
+	const float minst=0.1;
+	float4 precision;
+
+	// если луч достигает бокса, то интерполируем значение и вычисляем цвет
+	for(float k=kmin; k&lt;kmax; k+=step)
+	{
+		precision=pos+k*direction;
+
+		if(valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+		{
+			
+			//Проход луча
+			for(float t=k-5; t&lt;kmax; t+=minst)
+			{
+			
+				precision=pos+t*direction;
+				if(valexist(precision.S0,precision.S1,precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+				{
+					// поскольку воксель, это тот же пиксель, только в 3D пространстве, у него нет нормали, она заменяется градиентом
+					float4 normal = GetGradient(precision, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+					// расчет цвета пикселя, эмуляция модели освещения
+					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+					
+					
+					return (float4)(truecolor.s0, truecolor.S1, truecolor.S2, truecolor.S3);
+				}
+			
+			}
+		}
+		
+	}
+	
+	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+}
+
+
+
+// Вычисляет направление луча
+float4 GetDirection(int w, int h, int x, int y, float4 n, float4 right, float4 up)
+{
+	float aspect = (float) h/w; // поправочный коэффициент для проецирования 
+
+	float rx = (x-(w/2)) / (2.0f*w)*aspect;
+	float ry = (y-(h/2)) / (2.0f*h);
+
+	return fast_normalize( n+(rx*right)+(ry*up) );
+
+}
+
+
+void AttachPixel(global uchar4* line, size_t x,  uchar g, uchar b, uchar r, uchar a)
+{
+	global uchar* pix = (global uchar*)(line+x);
+
+	// BGRA
+	pix[0] = b; 	
+	pix[1] = g;
+	pix[2] = r;
+	pix[3] = a;	 // прозрачность 
+	
+}
+
+
+// конец вспомогательных функций----------------------------------------
+
+// функция, которая будет выполнятся kernel
+kernel void DVR(
+		    int W,
+		    int H,
+			global uchar* out,
+		    int offset,
+		    float4 pos,
+		    float4 n, // forward
+		    float4 right,
+ 		    float4 up,
+		    global short* volume, 
+		    int size,
+		    float4 light,
+		    float4 boxMinCon,
+	 	    float4 boxMaxCon,
+		    short winMin,
+	 	    short winMax,
+		    short carve,
+			short interpolation,
+			short tf,
+			global uint* colors,
+			int winWidth,
+			int winCentre,
+			int knots,
+			short winMin2,
+	 	    short winMax2,
+			global uchar* opacity,
+			float kamb,
+			float kdiff,
+			float kspec,
+			float exp,
+			float kc,
+			float kl,
+			float kq,
+			global ulong* voxelCounter) 
+{
+	// берем глобальный идентификатор work_item'a
+	size_t x=get_global_id(0);
+	size_t y=get_global_id(1);
+	
+	
+	// вычисляем стрку, в которой будут окрашены пиксели
+	global uchar4* line = (global uchar4*)(out+y*offset);
+
+	// вычисляем направление луча
+	float4 direction = GetDirection(W,H,x,y,n,right,up);
+
+	// пускаем луч
+	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+
+	// устанавливаем пиксель полученного цвета
+    
+    
+	AttachPixel(line, x,  (int)(col.s0 &gt; 1 ? 255 : col.s0 * 255), // G
+					      (int)(col.s1 &gt; 1 ? 255 : col.s1 * 255), // B
+					      (int)(col.s2 &gt; 1 ? 255 : col.s2 * 255), // R
+						  (int)(col.s3 &gt; 1 ? 255 : col.s3 * 255));// A
+						  // GBRA - мой формат.   BGRA - Microsoft
+
+
+
+}							
+
+
+
+</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>301.42</DriverVersion><BinaryName>swzaxxff.ipq</BinaryName></MetaFile><MetaFile><Source>#ifdef CPU_DEVICE
+	#define CL_POW pow
+#else
+	#define CL_POW native_powr
+#endif
+
+
+
+// начало вспомогательных функций----------------------------------------
+
+// нахождение значения вокселя в объеме
+short valexist(float x, float y, float z,global short* volume, int size, float4 boxMinCon, float4 boxMaxCon, short winMin, short winMax, short carve , short interpolation , short  winMin2, short  winMax2)
+{
+
+  // если координаты выходят за область просмотра (бокс), то отсечь их
+   
+	if(x &lt; boxMinCon.S0+1 ||
+       x &gt; boxMaxCon.S0-1 ||
+	   y &lt; boxMinCon.S1+1 ||
+	   y &gt; boxMaxCon.S1-1 ||
+	   z &lt; boxMinCon.S2+1 ||
+	   z &gt; boxMaxCon.S2-1 ||
+	   x&gt;=size || x&lt;0 ||
+	   y&gt;=size || y&lt;0 ||
+	   z&gt;=size || z&lt;0 )
+	   
+		return 0;
+
+
+	if(interpolation==0)
+	{
+
+		// отсекаем ненужные воксели в зависимости от окна просмотра 
+		if(carve == 1 &amp;&amp; (( volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax) || (volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &gt; winMin2 &amp;&amp; volume[((int)x) * size * size + ((int)y) * size + ((int)z)] &lt; winMax2) ) )
+					{
+						return 0;
+					}
+	
+		return volume[((int)x) * size * size + ((int)y) * size + ((int)z)];	
+
+	}
+
+	if(interpolation==1)
+	{
+		float xd = (x-(x-1)) / ((x+1)-(x-1));
+		float yd = (y-(y-1)) / ((y+1)-(y-1));
+		float zd = (z-(z-1)) / ((z+1)-(z-1));
+	
+		short C00 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z-1))]*xd;
+		short C10 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z-1))]*xd;
+		short C01 = volume[((int)(x-1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y-1)) * size + ((int)(z+1))]*xd;
+		short C11 = volume[((int)(x-1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*(1-xd) + volume[((int)(x+1)) * size * size + ((int)(y+1)) * size + ((int)(z+1))]*xd;
+
+		short C0 = C00*(1-yd) + C10*yd;
+		short C1 = C01*(1-yd) + C11*yd;
+		short C = C0*(1-zd) + C1*zd;
+
+		if(carve == 1 &amp;&amp; ((C &gt; winMin  &amp;&amp; C &lt; winMax) || (C &gt; winMin2  &amp;&amp; C &lt; winMax2)) )
+				{
+					return 0;
+				}
+
+		return C;
+
+
+	}
+	
+}
+
+
+// вычисляет нормаль для вокселя
+float4 GetGradient(float4 pos, global short* volume, int size, float4  boxMinCon, float4  boxMaxCon, short  winMin, short  winMax, short  carve, short interpolation, short  winMin2, short  winMax2)
+{
+
+	
+	float Gx = valexist(pos.s0 + 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0 - 1, pos.s1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+	float Gy = valexist(pos.s0, pos.s1 + 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1 - 1, pos.s2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+    float Gz = valexist(pos.s0, pos.s1, pos.s2 + 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)
+	   - valexist(pos.s0, pos.s1, pos.s2 - 1, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);		  
+	
+	return fast_normalize((float4)(Gx,Gy,Gz,0.0f));
+	
+	
+}
+
+float4  UIntToColor(uint color)
+{        
+
+            uchar G;
+            uchar B;
+            uchar R;
+            uchar A;
+
+            uint colorX;
+            uint res32;
+            uint res24;
+            uint res16;
+
+			float4 Col; 
+
+            uint two_in_24_max = (1 &lt;&lt; 24) - 1; 
+            ushort two_in_16_max = (1 &lt;&lt; 16) - 1; 
+
+            if (color &gt; two_in_24_max)
+            {
+
+                G = (uchar)(color &gt;&gt; 24); 
+                
+                colorX = color &gt;&gt; 24;
+                res32 = colorX &lt;&lt; 24;
+                color -= res32;
+
+            }
+            else
+            {
+                G = 0;
+               
+            }
+            if (color &gt; two_in_16_max)
+            {
+                B = (uchar)(color &gt;&gt; 16);
+                
+                colorX = color &gt;&gt; 16;
+                res24 = colorX &lt;&lt; 16;
+                color -= res24;
+            }
+            else
+            {
+                B = 0;
+                
+            }
+            if (color &gt; 255)
+            {
+                R = (uchar)(color &gt;&gt; 8);
+                
+                colorX = color &gt;&gt; 8;
+                res16 = colorX &lt;&lt; 8;
+                color -= res16;
+            }
+            else
+            {
+                R = 0;
+                A = (uchar)(color);
+				Col.S0 = (float)(G/255.0f);
+                Col.S1 = (float)(B/255.0f);
+                Col.S2 = (float)(R/255.0f);
+                Col.S3 = (float)(A/255.0f);
+                return Col; 
+            }
+            A = (uchar)color;
+            Col.S0 = (float)(G/255.0f);
+            Col.S1 = (float)(B/255.0f);
+            Col.S2 = (float)(R/255.0f);
+            Col.S3 = (float)(A/255.0f);
+
+            return Col; 
+
+}
+
+
+
+float4 GetLightning(
+
+ float4 pos,
+ float4 precision,
+ float4 normal,
+ float4  light,
+ global short* volume,
+ int size,
+ float4 boxMinCon,
+ float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float ka,
+ float kd,
+ float ks,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+
+{
+	short vox_HU = valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, 0, interpolation, winMin2, winMax2);
+	float4 col;
+	uchar ctr=0;
+	float factor;
+    unsigned short hupix;  
+	uchar rgba256=0;
+	float4 li;
+    float ill;
+	float4 reflect; 
+	float4 viewpoint = fast_normalize(pos);
+	float4 It,Ia,Id,Is;
+	int newMax = (winCentre+0.5*winWidth);
+	int newMin = (newMax - winWidth);
+    newMax-=32768;
+	newMin;
+	
+	
+	if((vox_HU&gt; winMin &amp;&amp; vox_HU &lt; winMax) || (vox_HU&gt; winMin2 &amp;&amp; vox_HU &lt; winMax2)) // проверка, попадает ли воксель в окно отсечения
+	{
+		col = (float4)(1.0f,0.0f,0.0f,1.0f); // GBRA
+	}
+	else
+	{
+		if(tf==0)
+		{
+			col =(float4)(1.0f,1.0f,1.0f,1.0f); 
+		}
+		else
+		{
+			 
+			factor = (float)(255.0f/(float)(winWidth));
+			hupix = (unsigned short)(vox_HU+32768);
+			rgba256 = (uchar)((hupix - newMin) * factor);
+			col = (float4)(UIntToColor(colors[rgba256]));
+		}
+	}
+
+	
+	
+	li = fast_normalize(light-precision); // от текущего вокселя к источнику света
+	ill = dot(li,normal); 
+	
+	
+
+	if(ill&gt;0)
+	{
+		
+		float4 light_dist = (light-precision);
+		float dist=sqrt(light_dist.s0*light_dist.s0+light_dist.s1*light_dist.s1+light_dist.s2*light_dist.s2+light_dist.s3*light_dist.s3);
+		float att=(1/(kc+kl*dist+kq*dist*dist));
+
+		Ia=col*(1.0, 0.0 , 1.0 , 1.0 );  // общий свет   GBRA
+		Id=ill*col; // диффузный свет
+
+		reflect=(2.0*ill*normal-li);
+		reflect=fast_normalize(reflect);
+
+		Is=CL_POW(dot(viewpoint,reflect),exp)*(0.0,0.0,1.0,1.0); // зеркальное отражение
+		It=ka*Ia+att*(kd*Id+ks*Is); // суммарный свет
+
+		return It; // 
+
+	}
+	return (float4)(0.0f,0.0f,0.0f,1.0f);
+}
+
+
+bool intersect(float4 pos, float4 direction, float4 boxMinCon, float4 boxMaxCon, float* kmin, float* kmax)
+{
+	float t0 = FLT_MIN;
+	float t1 = FLT_MAX;
+	
+	float inDirection = 1.0f / direction.S0; // x
+	float tmin = (boxMinCon.S0 - pos.S0) * inDirection;
+	float tmax =(boxMaxCon.S0 - pos.S0) * inDirection;
+
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+				
+	inDirection = 1.0f / direction.S1;  // y
+	tmin = (boxMinCon.S1 - pos.S1) * inDirection;
+	tmax = (boxMaxCon.S1 - pos.S1) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+	if (t0 &gt; t1)
+		return false;
+
+	inDirection = 1.0f / direction.S2; // z
+	tmin = (boxMinCon.S2 - pos.S2) * inDirection;
+	tmax = (boxMaxCon.S2 - pos.S2) * inDirection;
+	
+	if (tmin &gt; tmax)
+	{
+		inDirection = tmax;
+		tmax = tmin;
+		tmin = inDirection;
+	}
+	t0 = tmin &gt; t0 ? tmin : t0;
+	t1 = tmax &lt; t1 ? tmax : t1;
+
+	if (t0 &gt; t1)
+		return false;
+
+	*kmin = t0;
+	*kmax = t1;
+
+	return true;
+	
+}
+
+
+
+// пускает луч в наш объем и вычисляет значение *интерполируемого* вокселя
+float4 TraceRayandGetPixelColor
+(
+ float4 pos,
+ float4 direction, 
+ global short* volume,
+ int size,
+ float4 light,
+ float4 boxMinCon, float4 boxMaxCon,
+ short  winMin,
+ short  winMax,
+ short carve,
+ short interpolation,
+ short tf,
+ global uint* colors,
+ int knots,
+ short  winMin2,
+ short  winMax2,
+ int winWidth,
+ int winCentre,
+ float kamb,
+ float kdiff,
+ float kspec,
+ float exp,
+ float kc,
+ float kl,
+ float kq,
+ global ulong* voxelCounter
+ )
+ 
+{
+
+	float kmin=0;
+	float kmax=0;
+	
+	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
+	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &amp;kmin,&amp;kmax) )
+	{
+		return (float4)(0.0f,0.0f,0.0f,0.0f);
+	}
+
+	const float step=5;
+	const float minst=0.1;
+	float4 precision;
+
+	// если луч достигает бокса, то интерполируем значение и вычисляем цвет
+	for(float k=kmin; k&lt;kmax; k+=step)
+	{
+		precision=pos+k*direction;
+
+		if(valexist(precision.S0, precision.S1, precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+		{
+			
+			//Проход луча
+			for(float t=k-5; t&lt;kmax; t+=minst)
+			{
+			
+				precision=pos+t*direction;
+				if(valexist(precision.S0,precision.S1,precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
+				{
+					// поскольку воксель, это тот же пиксель, только в 3D пространстве, у него нет нормали, она заменяется градиентом
+					float4 normal = GetGradient(precision, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
+
+					// расчет цвета пикселя, эмуляция модели освещения
+					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+					
+					
+					return (float4)(truecolor.s0, truecolor.S1, truecolor.S2, truecolor.S3);
+				}
+			
+			}
+		}
+		
+	}
+	
+	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+}
+
+
+
+// Вычисляет направление луча
+float4 GetDirection(int w, int h, int x, int y, float4 n, float4 right, float4 up)
+{
+	float aspect = (float) h/w; // поправочный коэффициент для проецирования 
+
+	float rx = (x-(w/2)) / (2.0f*w)*aspect;
+	float ry = (y-(h/2)) / (2.0f*h);
+
+	return fast_normalize( n+(rx*right)+(ry*up) );
+
+}
+
+
+void AttachPixel(global uchar4* line, size_t x,  uchar g, uchar b, uchar r, uchar a)
+{
+	global uchar* pix = (global uchar*)(line+x);
+
+	// BGRA
+	pix[0] = b; 	
+	pix[1] = g;
+	pix[2] = r;
+	pix[3] = a;	 // прозрачность 
+	
+}
+
+
+// конец вспомогательных функций----------------------------------------
+
+// функция, которая будет выполнятся kernel
+kernel void DVR(
+		    int W,
+		    int H,
+			global uchar* out,
+		    int offset,
+		    float4 pos,
+		    float4 n, // forward
+		    float4 right,
+ 		    float4 up,
+		    global short* volume, 
+		    int size,
+		    float4 light,
+		    float4 boxMinCon,
+	 	    float4 boxMaxCon,
+		    short winMin,
+	 	    short winMax,
+		    short carve,
+			short interpolation,
+			short tf,
+			global uint* colors,
+			int winWidth,
+			int winCentre,
+			int knots,
+			short winMin2,
+	 	    short winMax2,
+			global uchar* opacity,
+			float kamb,
+			float kdiff,
+			float kspec,
+			float exp,
+			float kc,
+			float kl,
+			float kq,
+			global ulong* voxelCounter) 
+{
+	// берем глобальный идентификатор work_item'a
+	size_t x=get_global_id(0);
+	size_t y=get_global_id(1);
+	
+	
+	// вычисляем стрку, в которой будут окрашены пиксели
+	global uchar4* line = (global uchar4*)(out+y*offset);
+
+	// вычисляем направление луча
+	float4 direction = GetDirection(W,H,x,y,n,right,up);
+
+	// пускаем луч
+	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+
+	// устанавливаем пиксель полученного цвета
+    
+    
+	AttachPixel(line, x,  (int)(col.s0 &gt; 1 ? 255 : col.s0 * 255), // G
+					      (int)(col.s1 &gt; 1 ? 255 : col.s1 * 255), // B
+					      (int)(col.s2 &gt; 1 ? 255 : col.s2 * 255), // R
+						  (int)(col.s3 &gt; 1 ? 255 : col.s3 * 255));// A
+						  // GBRA - мой формат.   BGRA - Microsoft
+
+
+
+}							
+
+
+
+</Source><Platform>NVIDIA CUDA</Platform><Device>ION</Device><DriverVersion>301.42</DriverVersion><BinaryName>jkjwygcp.uu1</BinaryName></MetaFile></MetaFiles></BinaryMetaInfo>
