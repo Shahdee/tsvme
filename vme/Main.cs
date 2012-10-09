@@ -13,7 +13,7 @@ namespace vme
 {
     public partial class Main : Form
     {
-        private  bool readable = false;
+        private bool readable = false;
         private DicomDecoder dec;
         protected List<byte> pixels8;
         protected List<ushort> pixels16;
@@ -25,7 +25,8 @@ namespace vme
 
         private int knots_counter;
 
-        public int KnotsCounter {
+        public int KnotsCounter
+        {
             get { return knots_counter; }
             set { knots_counter = value; } // WRONG
         }
@@ -38,11 +39,13 @@ namespace vme
         private int imageWidth;
         private int imageHeight;
 
-        public int ImageWidth {
+        public int ImageWidth
+        {
             get { return imageWidth; }
             private set { imageWidth = value; }
         }
-        public int ImageHeight {
+        public int ImageHeight
+        {
             get { return imageHeight; }
             private set { imageHeight = value; }
         }
@@ -58,12 +61,14 @@ namespace vme
 
         private Color inkColor;
 
-        public Color InkColor {
+        public Color InkColor
+        {
             get { return inkColor; }
             private set { inkColor = value; }
         }
 
-        public Main(){
+        public Main()
+        {
             InitializeComponent();
             this.IsMdiContainer = true;
             dec = new DicomDecoder();
@@ -84,7 +89,8 @@ namespace vme
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "All DICOM Files(*.*)|*.*";
-            if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0)){
+            if ((ofd.ShowDialog() == DialogResult.OK) && (ofd.FileName.Length > 0))
+            {
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.EraseFields();
@@ -96,7 +102,8 @@ namespace vme
             ofd.Dispose();
         }
 
-        public void ReadAndDisplayDicomFile(string filename, string name){
+        public void ReadAndDisplayDicomFile(string filename, string name)
+        {
             if (readable = dec.ReadFile(filename))
                 DisplayData();
             else
@@ -104,7 +111,8 @@ namespace vme
             return;
         }
 
-        public void DisplayData(){
+        public void DisplayData()
+        {
             /* here I can add work panels */
             view = new ImageViewer(); // HERE IT IS
             view.MdiParent = this; // HERE IT IS
@@ -125,7 +133,8 @@ namespace vme
             winCentre = dec.WindowCenter; // средняя величина между самым ярким и самым тусклым пикселем
             winWidth = dec.WindowWidth; // разница между самым ярким и самым тусклым пикселем
             spp = dec.SamplesPerPixel;
-            if (dec.Intercept < 0){
+            if (dec.Intercept < 0)
+            {
                 dec.SignedImage = true; // ага, а я ведь залочила для других классов модификацию поля
             }
             signedImage = dec.SignedImage;
@@ -135,34 +144,41 @@ namespace vme
             ImagePlane.NewImage = true;*/
 
             histogram = new long[256];
-            if (spp == 1 && bpp == 8){
+            if (spp == 1 && bpp == 8)
+            {
                 pixels8.Clear();
                 pixels16.Clear();
                 dec.GetPixels8(ref pixels8);
-                if (winCentre == 0 && winWidth == 0){
+                if (winCentre == 0 && winWidth == 0)
+                {
                     winWidth = 256;
                     winCentre = 128;
                 }
                 view.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram, inkColor);
                 //ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, true, this, histogram, inkColor);
             }
-            if (spp == 1 && bpp == 16){
+            if (spp == 1 && bpp == 16)
+            {
                 pixels16.Clear();
                 pixels8.Clear();
                 dec.GetPixels16(ref pixels16);
                 intercept = (short)dec.Intercept;
                 slope = (short)dec.Slope;
-                 // Учитываем Modality LUT
-                if (dec.Intercept < 0){
+                // Учитываем Modality LUT
+                if (dec.Intercept < 0)
+                {
                     for (int i = 0; i < pixels16.Count; i++)
                         pixels16[i] = (ushort)(((short)(pixels16[i] * slope + intercept)) + 32768);
                 }
-                if (winCentre == 0 && winWidth == 0){
+                if (winCentre == 0 && winWidth == 0)
+                {
                     winWidth = 65536;
                     winCentre = 32768;
                 }
-                if (!navi){
-                    for (int i = 0; i < pixels16.Count; i++){
+                if (!navi)
+                {
+                    for (int i = 0; i < pixels16.Count; i++)
+                    {
                         pixels_volume.Add(pixels16[i]);
                     }
                 }
@@ -172,17 +188,20 @@ namespace vme
                 tf.PassAlong(this);
             }
             /* если у нас 16bpp lossless CT изображение */
-            if (spp == 1 && bpp == 16 && dec.CompressedImage){
+            if (spp == 1 && bpp == 16 && dec.CompressedImage)
+            {
                 // позже доделать чтение lossless и учет предсказателя, притом что дерево уже построенно правильно и есть сырые данные
             }
         }
 
-        public void EraseHistogramArray(){
+        public void EraseHistogramArray()
+        {
             for (int i = 0; i < 256; i++)
                 histogram[i] = 0;
         }
 
-        public void UpdateWindowLevel(int winWidth_from_Canvas, int winCentre_from_Canvas, Imagebpp bpp, long[] histogram){
+        public void UpdateWindowLevel(int winWidth_from_Canvas, int winCentre_from_Canvas, Imagebpp bpp, long[] histogram)
+        {
             int winMin = Convert.ToInt32(winCentre_from_Canvas - 0.5 * winWidth_from_Canvas);
             int winMax = winMin + winWidth_from_Canvas;
             winWidth = winWidth_from_Canvas;
@@ -196,7 +215,8 @@ namespace vme
             this.tf.SetParametersHistogram(winMin, winMax, w, с, bpp, signedImage, histogram);
         }
 
-        public void UpdateFromColoredTF(){
+        public void UpdateFromColoredTF()
+        {
             winWidth = dec.WindowWidth;
             winCentre = dec.WindowCenter;
 
@@ -204,17 +224,19 @@ namespace vme
             //EraseHistogramArray();
             //this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, winWidth, winCentre, false, this, ref  histogram, inkColor);
         }
-         
-        public void UpdateColorFromHistogram(double width_from_coloredTF, double center_from_coloredTF){
+
+        public void UpdateColorFromHistogram(double width_from_coloredTF, double center_from_coloredTF)
+        {
             int width = (int)(width_from_coloredTF);
-            int center = (int)(center_from_coloredTF+short.MinValue);
+            int center = (int)(center_from_coloredTF + short.MinValue);
 
             //this.ImagePlane.viewcolor = true;
             //this.ImagePlane.EraseHistogramArray();
             //this.ImagePlane.SetParameters(ref pixels16, intercept, imageWidth, imageHeight, width, center, false, this, ref  histogram, inkColor);
         }
 
-        public void MainClose(object sender, FormClosingEventArgs e){
+        public void MainClose(object sender, FormClosingEventArgs e)
+        {
             pixels8.Clear();
             pixels16.Clear();
             //ImagePlane.Dispose();
@@ -223,8 +245,10 @@ namespace vme
         /*  По умолчанию область*/
         public void Reset_Click(object sender, EventArgs e)
         {
-            if (pixels8 != null || pixels16 != null){
-                if ((pixels8.Count > 0) || (pixels16.Count > 0)){
+            if (pixels8 != null || pixels16 != null)
+            {
+                if ((pixels8.Count > 0) || (pixels16.Count > 0))
+                {
                     EraseHistogramArray();
                     winWidth = dec.WindowWidth;
                     winCentre = dec.WindowCenter;
@@ -232,7 +256,7 @@ namespace vme
                     if (bpp == 8)
                     {
                         if (spp == 1) { }
-                            //ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram, inkColor);
+                        //ImagePlane.SetParameters(ref pixels8, imageWidth, imageHeight, winWidth, winCentre, spp, false, this, histogram, inkColor);
                     }
 
                     if (bpp == 16) { }
@@ -247,7 +271,8 @@ namespace vme
 
         public void backward_Click(object sender, EventArgs e)
         {
-            if (image_number>1){
+            if (image_number > 1)
+            {
                 pixels16.Clear();
                 dec.EraseFields();
                 //ImagePlane.EraseFields();
@@ -261,7 +286,8 @@ namespace vme
 
         public void forward_Click(object sender, EventArgs e)
         {
-            if (image_number < num_of_images){
+            if (image_number < num_of_images)
+            {
                 pixels16.Clear();
                 dec.EraseFields();
                 //ImagePlane.EraseFields();
@@ -278,7 +304,8 @@ namespace vme
             ColorDialog inkDialog = new ColorDialog();
             inkDialog.AllowFullOpen = true;
             inkDialog.ShowHelp = true;
-            if (inkDialog.ShowDialog() == DialogResult.OK){
+            if (inkDialog.ShowDialog() == DialogResult.OK)
+            {
                 inkColor = inkDialog.Color;
             }
         }
@@ -286,7 +313,8 @@ namespace vme
         public void openChest_Click(object sender, EventArgs e)
         {
             path = "D:\\tsvme\\DICOM images\\my\\";
-            for (int i = 1; i < 167; i++){
+            for (int i = 1; i < 167; i++)
+            {
                 safename = "_" + Convert.ToString(i);
                 pixels16.Clear();
                 pixels8.Clear();
@@ -304,7 +332,8 @@ namespace vme
         public void openKid_Click(object sender, EventArgs e)
         {
             path = "D:\\tsvme\\DICOM images\\kid\\";
-            for (int i = 30; i < 190; i++){
+            for (int i = 30; i < 190; i++)
+            {
                 safename = "_" + Convert.ToString(i);
                 pixels16.Clear();
                 pixels8.Clear();
@@ -326,6 +355,7 @@ namespace vme
             vform.Idle();
             vform.Show();
         }
+
     }
 }
 

@@ -310,3 +310,6 @@ D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.read.1.tlog
 D:\tsvme\repo\vme\obj\x86\Debug\GenerateResource.write.1.tlog
 D:\tsvme\repo\vme\obj\x86\Debug\vme.ImageViewer.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.TransferFunction.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.ROI.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.Presets.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.vizMenu.resources

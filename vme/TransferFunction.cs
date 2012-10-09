@@ -45,10 +45,10 @@ namespace vme
         {
             InitializeComponent();
             DoubleBuffered = true;
-            marginLeft = 182;
-            marginRight = 182;
-            marginTop = 75;
-            marginBottom = 74;
+            marginLeft = 20;
+            marginRight = 20;
+            marginTop = 20;
+            marginBottom = 70;
             pp.p.X = 0;
             pp.p.Y = 0;
 
@@ -65,9 +65,7 @@ namespace vme
             knots.Add(pp);
             active_number = 0;
             is_active_global = false;
-
         }
-
 
         public void PassAlong(Main form)
         {
@@ -76,13 +74,11 @@ namespace vme
 
         public void SetParametersHistogram(int minVal, int maxVal, int widthVal, int centreVal, Imagebpp bpp, bool sign, long[] histogram)
         {
-
             winMin = minVal;
             winMax = maxVal;
             winWidth = widthVal;
             winCentre = centreVal;
             first = false;
-
             iBpp = bpp;
             signedImage = sign;
             histogram_255 = histogram;
@@ -95,13 +91,8 @@ namespace vme
         {
             knots.Clear();  // очистить все контрольные точки и этого достаточно
             paint_histogram = true;
-
             pp.p = new Point(marginLeft + 1, this.Height - marginBottom - 1); // устанавливается единственная точка в нуле по умолчанию
             pp.c = System.Drawing.Color.Black;
-            knots.Add(pp);
-            active_number = 0;
-            is_active_global = false;
-
             /*
             this.active.Text = "Unactive";
             this.cordX.Text = "x: ";
@@ -111,7 +102,6 @@ namespace vme
             this.blue.Text = "B ";
             this.alpha.Text = "A ";
             this.opacity.Text = "O ";*/
-
             form_this.UpdateFromColoredTF();
             Invalidate();
         }
@@ -125,11 +115,7 @@ namespace vme
 
         private uint ColorToUInt(Color c) // GBRA
         {
-            uint gu = c.G
-                , bu = c.B
-                , ru = c.R
-                , au = c.A;
-
+            uint gu = c.G, bu = c.B, ru = c.R, au = c.A;
             return (uint)((gu << 24) + (bu << 16) + (ru << 8) + au);
         }
 
@@ -211,16 +197,18 @@ namespace vme
             Rectangle rect = new Rectangle(pt1.X, pt1.Y, pt2.X - pt1.X, pt3.Y - pt1.Y);
             g.FillRectangle(br, rect);
 
-            Point pv11, pv21, ph11, ph21;
+            /*
+            //Point pv11, pv21, ph11, ph21;
             pv11 = new Point();
             pv21 = new Point();
             ph11 = new Point();
-            ph21 = new Point();
+            ph21 = new Point();*/
 
             int iNoVDivisions = 8, iNoHDivisions = 8;
             int iVertSpace = Convert.ToInt32((Height - marginTop - marginBottom) / iNoVDivisions);
             int iHorizSpace = Convert.ToInt32((Width - marginLeft - marginRight) / iNoHDivisions);
 
+            /*
             // решетка
             for (int i = 1; i < iNoVDivisions; ++i)
             {
@@ -231,7 +219,6 @@ namespace vme
                 g.DrawLine(p, pv11, pv21);
             }
 
-
             for (int i = 1; i < iNoHDivisions; ++i)
             {
                 ph11.X = marginLeft + i * iHorizSpace;
@@ -239,7 +226,7 @@ namespace vme
                 ph21.X = ph11.X;
                 ph21.Y = Height - marginBottom;
                 g.DrawLine(p, ph11, ph21);
-            }
+            }*/
 
             // границы прямоугольника
             p.Color = System.Drawing.Color.Azure;
@@ -253,7 +240,8 @@ namespace vme
             br.Dispose();
         }
 
-        private void DrawLines(Graphics g)
+
+        private void DrawLines()
         {
             graphWidth = Width - marginLeft - marginRight;
             graphHeight = Height - marginTop - marginBottom;
@@ -309,7 +297,7 @@ namespace vme
             p.X = marginLeft - 20;
             p.Y = marginTop + 25;
             StringFormat sf = new StringFormat(StringFormatFlags.DirectionVertical);
-            gr.DrawString("Яркость[bpp] и непрозрачность[%]", f, br, p, sf);
+            gr.DrawString("%", f, br, p, sf);
 
             f.Dispose();
             br.Dispose();
@@ -350,7 +338,7 @@ namespace vme
                 br = new SolidBrush(System.Drawing.Color.FromArgb(a, r, g, b));
                 p = new Pen(br);
                 put.X = i;
-                put.Y = this.Height - marginBottom + 30;
+                put.Y = this.Height - marginBottom;
                 put2 = put;
                 put2.Y += 20;
                 gg.DrawLine(p, put, put2);
@@ -669,8 +657,9 @@ namespace vme
             Bitmap bmp = new Bitmap(this.Width, this.Height);
             Graphics gr = Graphics.FromImage(bmp);
             DrawBoundaryAndGrid(gr);
+            
             if ((winWidth * winCentre) != 0)
-                DrawLines(gr);
+                DrawLines();
             if ((winWidth * winCentre) != 0)
                 DrawAxesLabels(gr);
             if (paint_histogram)

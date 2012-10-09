@@ -101,6 +101,12 @@
     <Compile Include="TransferFunction.Designer.cs">
       <DependentUpon>TransferFunction.cs</DependentUpon>
     </Compile>
+    <Compile Include="vizMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="vizMenu.Designer.cs">
+      <DependentUpon>vizMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="VoxelImage.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,6 +133,9 @@
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Presets.resx">
+      <DependentUpon>Presets.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -137,8 +146,14 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ROI.resx">
+      <DependentUpon>ROI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TransferFunction.resx">
       <DependentUpon>TransferFunction.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="vizMenu.resx">
+      <DependentUpon>vizMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="VoxelImage.resx">
       <DependentUpon>VoxelImage.cs</DependentUpon>

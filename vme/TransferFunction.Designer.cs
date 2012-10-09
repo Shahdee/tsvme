@@ -28,15 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // TransferFunction
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(394, 272);
+            this.ControlBox = false;
+            this.DoubleBuffered = true;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Location = new System.Drawing.Point(50, 350);
+            this.Name = "TransferFunction";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "TransferFunction";
-            //-----
-            this.Paint += new System.Windows.Forms.PaintEventHandler(TF_Paint);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.TF_Paint);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.TF_MouseClick);
-            this.Size = new System.Drawing.Size(620, 350);
             this.ResumeLayout(false);
-            this.PerformLayout();
+
         }
 
         #endregion
