@@ -45,17 +45,15 @@ namespace vme
         {
             InitializeComponent();
             DoubleBuffered = true;
-            marginLeft = 20;
-            marginRight = 20;
+            marginLeft = 72;
+            marginRight = 72;
             marginTop = 20;
             marginBottom = 70;
             pp.p.X = 0;
             pp.p.Y = 0;
-
             winWidth = 0;
             winCentre = 0;
             signedImage = false;
-
             paint_histogram = false;
             first = true;
             knots = new List<Knot>();
@@ -187,55 +185,14 @@ namespace vme
         {
             // границы и цвет фона
             Point pt1 = new Point(marginLeft, marginTop);
-            Point pt2 = new Point(Width - marginRight, marginTop);
-            Point pt3 = new Point(Width - marginRight, Height - marginBottom);
+            Point pt2 = new Point(marginLeft+256, marginTop);//new Point(Width - marginRight, marginTop);
+            Point pt3 = new Point(marginLeft + 256, Height - marginBottom);//new Point(Width - marginRight, Height - marginBottom);
             Point pt4 = new Point(marginLeft, Height - marginBottom);
             Pen p = new Pen(System.Drawing.Color.LightGray);
             Brush br = new SolidBrush(System.Drawing.Color.White);
-
             // задний фон 
             Rectangle rect = new Rectangle(pt1.X, pt1.Y, pt2.X - pt1.X, pt3.Y - pt1.Y);
             g.FillRectangle(br, rect);
-
-            /*
-            //Point pv11, pv21, ph11, ph21;
-            pv11 = new Point();
-            pv21 = new Point();
-            ph11 = new Point();
-            ph21 = new Point();*/
-
-            int iNoVDivisions = 8, iNoHDivisions = 8;
-            int iVertSpace = Convert.ToInt32((Height - marginTop - marginBottom) / iNoVDivisions);
-            int iHorizSpace = Convert.ToInt32((Width - marginLeft - marginRight) / iNoHDivisions);
-
-            /*
-            // решетка
-            for (int i = 1; i < iNoVDivisions; ++i)
-            {
-                pv11.X = marginLeft;
-                pv11.Y = marginTop + i * iVertSpace;
-                pv21.X = Width - marginRight;
-                pv21.Y = pv11.Y;
-                g.DrawLine(p, pv11, pv21);
-            }
-
-            for (int i = 1; i < iNoHDivisions; ++i)
-            {
-                ph11.X = marginLeft + i * iHorizSpace;
-                ph11.Y = marginTop;
-                ph21.X = ph11.X;
-                ph21.Y = Height - marginBottom;
-                g.DrawLine(p, ph11, ph21);
-            }*/
-
-            // границы прямоугольника
-            p.Color = System.Drawing.Color.Azure;
-            p.Width = 2;
-            g.DrawLine(p, pt1, pt2);
-            g.DrawLine(p, pt2, pt3);
-            g.DrawLine(p, pt3, pt4);
-            g.DrawLine(p, pt4, pt1);
-
             p.Dispose();
             br.Dispose();
         }
@@ -253,7 +210,7 @@ namespace vme
             Font f = new Font("Calibri", 10);
             Brush br = new SolidBrush(System.Drawing.Color.Black);
             PointF p = new PointF();
-            p.X = marginLeft - 24;
+            p.X = marginLeft - 24;//
             p.Y = marginTop - 2;
             gr.DrawString("100", f, br, p);
 
@@ -338,7 +295,7 @@ namespace vme
                 br = new SolidBrush(System.Drawing.Color.FromArgb(a, r, g, b));
                 p = new Pen(br);
                 put.X = i;
-                put.Y = this.Height - marginBottom;
+                put.Y = this.Height - marginBottom+20;
                 put2 = put;
                 put2.Y += 20;
                 gg.DrawLine(p, put, put2);
@@ -352,7 +309,6 @@ namespace vme
         {
             Knot p1;
             Knot p2;
-
             for (int i = 0; i < knots.Count; i++)
                 DrawPoint(g, knots[i]);
 
@@ -569,6 +525,8 @@ namespace vme
                         if (!is_active_global && (is_active = CheckActivePoint())) // проверяем на активную точку
                         {
                             knots[active_number] = active_point;
+
+
                             is_active_global = true;
                             /*
                             this.active.Text = "Active";
@@ -592,8 +550,8 @@ namespace vme
                                 CheckCoordsAndPutActivePoint();
                             }
                         }
-                        paint_histogram = true;
-                        Invalidate();
+                        paint_histogram = true; //!!!
+                        Invalidate(); //!!!
                     }
                 }
                 if (e.Button == MouseButtons.Right)

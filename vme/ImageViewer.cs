@@ -192,6 +192,12 @@ namespace vme
             UpdateMainForm();
         }
 
+        public void EraseHistogramArray()
+        {
+            for (int i = 0; i < 256; i++)
+                histogram[i] = 0;
+        }
+
         public void UpdateMainForm()
         {
             mf.UpdateWindowLevel(winWidth, winCentre, bpp, histogram);
@@ -206,7 +212,7 @@ namespace vme
             imgWidth = wid;
             imgHeight = hei;
             histogram = hi;
-            //EraseHistogramArray();
+            EraseHistogramArray();
             winWidth = Convert.ToInt32(windowWidth);
             winCentre = Convert.ToInt32(windowCentre);
             sizeImg = imgWidth * imgHeight;
@@ -396,6 +402,82 @@ namespace vme
             else if (bpp == Imagebpp.Sixteenbpp)
             {
                 e.Graphics.DrawImage(bmp, this.ClientRectangle.X, this.ClientRectangle.Y);
+            }
+        }
+
+        public void ImageViewer_MouseClick(object sender, MouseEventArgs e)
+        {
+            /*
+            if (e.Button == MouseButtons.Left)
+            {
+               
+            }
+            UpdateMainForm();
+            Invalidate();*/
+        }
+
+        public void ImageViewer_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (imageAvailable == true)
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    ptWLDown.X = e.X;
+                    ptWLDown.Y = e.Y;
+                    rightMouseDown = true;
+                    Cursor = Cursors.Hand;
+                }
+
+            }
+        }
+
+        public void ImageViewer_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (rightMouseDown == true)
+            {
+                rightMouseDown = false;
+                Cursor = Cursors.Default;
+            }
+        }
+
+        public void ImageViewer_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (rightMouseDown == true)
+            {
+                winShr1 = winWidth >> 1;
+                winWidth = winMax - winMin;
+                winCentre = winMin + winShr1;
+
+                deltaX = Convert.ToInt32((ptWLDown.X - e.X) * changeValWidth);
+                deltaY = Convert.ToInt32((ptWLDown.Y - e.Y) * changeValCentre);
+
+                winCentre -= deltaY;
+                winWidth -= deltaX;
+
+                if (winWidth < 2) winWidth = 2;
+
+                winMin = winCentre - winShr1;
+                winMax = winCentre + winShr1;
+
+                if (winMin >= winMax) winMin = winMax - 1;
+                if (winMax <= winMin) winMax = winMin + 1;
+
+                ptWLDown.X = e.X;
+                ptWLDown.Y = e.Y;
+
+                EraseHistogramArray();
+                if (bpp == Imagebpp.Eightbpp)
+                {
+                    ComputeLookUpTable8();
+                    CreateImage8();
+                }
+                else if (bpp == Imagebpp.Sixteenbpp)
+                {
+                    ComputeLookUpTable16();
+                    CreateImage16(); //  здесь  расчитывается также гистограмма изображения
+                }
+                UpdateMainForm();
+                Invalidate();
             }
         }
     }
