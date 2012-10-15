@@ -31,6 +31,8 @@ namespace vme
         private bool is_active_global;
         private Color preactive_color;
 
+        private bool leftMouseDown;
+
         List<Knot> knots; // массив узловых точек
         long[] histogram_255;
         Imagebpp iBpp;
@@ -63,6 +65,7 @@ namespace vme
             knots.Add(pp);
             active_number = 0;
             is_active_global = false;
+            leftMouseDown = false;
         }
 
         public void PassAlong(Main form)
@@ -416,11 +419,7 @@ namespace vme
                 if (is_active_global)
                 {
                     preactive_color = MyDialog.Color;
-                    /*
-                    this.red.Text = "R " + Convert.ToString(preactive_color.R);
-                    this.green.Text = "G " + Convert.ToString(preactive_color.G);
-                    this.blue.Text = "B " + Convert.ToString(preactive_color.B);
-                    this.alpha.Text = "A " + Convert.ToString(preactive_color.A);*/
+
                 }
                 pp.c = MyDialog.Color;
             }
@@ -437,12 +436,8 @@ namespace vme
         public bool CheckActivePoint()
         {
             bool shot = false;
-
-            for (int i = 0; i < knots.Count; i++)
-            {
-                // если мы попали в точку
-                if (shot = InKnotArea(i))
-                {
+            for (int i = 0; i < knots.Count; i++){
+                if (shot = InKnotArea(i)){// если мы попали в точку
                     active_number = i;
                     active_point = knots[i];
                     preactive_color = knots[i].c; // сохраняем старый цвет теперь уже активной точки точки
@@ -464,16 +459,7 @@ namespace vme
                         active_point.p.X = pp.p.X;
                         active_point.p.Y = pp.p.Y;
                         knots[active_number] = active_point;
-                        /*
-                        this.cordX.Text = "x: " + Convert.ToString(active_point.p.X);
-                        this.cordY.Text = "y: " + Convert.ToString(active_point.p.Y);
-                        this.red.Text = "R " + Convert.ToString(active_point.c.R);
-                        this.green.Text = "G " + Convert.ToString(active_point.c.G);
-                        this.blue.Text = "B " + Convert.ToString(active_point.c.B);
-                        this.alpha.Text = "A " + Convert.ToString(active_point.c.A);
-                        this.opacity.Text = "O ";*/
                     }
-
                 }
                 else
                 // если это первая либо последняя точка
@@ -487,7 +473,6 @@ namespace vme
                             knots[active_number] = active_point;
                         }
                     }
-
                     if (active_number == knots.Count - 1)
                     {
                         if ((pp.p.X > knots[active_number - 1].p.X && pp.p.X < this.Width - marginRight - 1))
@@ -497,16 +482,53 @@ namespace vme
                             knots[active_number] = active_point;
                         }
                     }
-                    /*
-                    this.cordX.Text = "x: " + Convert.ToString(active_point.p.X);
-                    this.cordY.Text = "y: " + Convert.ToString(active_point.p.Y);
-                    this.red.Text = "R " + Convert.ToString(active_point.c.R);
-                    this.green.Text = "G " + Convert.ToString(active_point.c.G);
-                    this.blue.Text = "B " + Convert.ToString(active_point.c.B);
-                    this.alpha.Text = "A " + Convert.ToString(active_point.c.A);
-                    this.opacity.Text = "O ";*/
                 }
+            }
+        }
 
+        public void TF_MouseDown(object sender, MouseEventArgs e) {
+            if (form_this != null)
+            {
+                bool is_active;
+                pp.p.X = e.X;
+                pp.p.Y = e.Y;
+                if (e.Button == MouseButtons.Left){
+                    if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && form_this != null)
+                    {
+                        if (!is_active_global && (is_active = CheckActivePoint())) // if IT'S an active point
+                        {
+                            leftMouseDown = true;
+                            is_active_global = true;
+                        }
+                    }   
+                }
+            }
+        }
+
+        public void TF_MouseMove(object sender, MouseEventArgs e){
+            if (leftMouseDown){
+                pp.p.X = e.X;
+                pp.p.Y = e.Y;
+                if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && form_this != null){
+                    knots[active_number] = active_point;
+                    CheckCoordsAndPutActivePoint();
+                    paint_histogram = true; 
+                    Invalidate(); 
+                }
+            }
+        }
+
+        public void TF_MouseUp(object sender, MouseEventArgs e) {
+            if (leftMouseDown){
+                if (is_active_global)
+                {
+                    leftMouseDown = false;
+                    is_active_global = false;
+                    active_point.c = preactive_color;
+                    knots[active_number] = active_point;
+                    paint_histogram = true;
+                    Invalidate();
+                }
             }
         }
 
@@ -517,65 +539,23 @@ namespace vme
                 bool is_active = false;
                 pp.p.X = e.X;
                 pp.p.Y = e.Y;
-
-                if (e.Button == MouseButtons.Left)
-                {
+                if (e.Button == MouseButtons.Left){
                     if (pp.p.X > marginLeft && pp.p.X < Width - marginRight && pp.p.Y > marginTop && pp.p.Y < Height - marginBottom && form_this != null)
                     {
-                        if (!is_active_global && (is_active = CheckActivePoint())) // проверяем на активную точку
-                        {
-                            knots[active_number] = active_point;
-
-
-                            is_active_global = true;
-                            /*
-                            this.active.Text = "Active";
-                            this.cordX.Text = "x: " + Convert.ToString(active_point.p.X);
-                            this.cordY.Text = "y: " + Convert.ToString(active_point.p.Y);
-                            this.red.Text = "R " + Convert.ToString(preactive_color.R);
-                            this.green.Text = "G " + Convert.ToString(preactive_color.G);
-                            this.blue.Text = "B " + Convert.ToString(preactive_color.B);
-                            this.alpha.Text = "A " + Convert.ToString(preactive_color.A);
-                            this.opacity.Text = "O ";*/
-                        }
-                        else
-                        {
-                            // если мы не выбрали точку для редактирования, тогда просто добавляем новую 
-                            if (CanDraw() && !is_active_global)
-                            {
+                        if (!(!is_active_global && (is_active = CheckActivePoint()))){ // Check if it's NOT an active point
+                            // Add new point if it's not an active point
+                            if (CanDraw() && !is_active_global){
                                 knots.Add(pp);
                             }
-                            if (is_active_global)
-                            {
-                                CheckCoordsAndPutActivePoint();
-                            }
                         }
-                        paint_histogram = true; //!!!
-                        Invalidate(); //!!!
+                        paint_histogram = true; 
+                        Invalidate(); 
                     }
                 }
                 if (e.Button == MouseButtons.Right)
                 {
-                    if (is_active_global)
-                    {
-                        is_active_global = false;
-                        active_point.c = preactive_color;
-                        knots[active_number] = active_point;
-                        active_point.c = System.Drawing.Color.YellowGreen;
-                        /*
-                        this.active.Text = "Unactive";
-                        this.cordX.Text = "x: ";
-                        this.cordY.Text = "y: ";
-                        this.red.Text = "R ";
-                        this.green.Text = "G ";
-                        this.blue.Text = "B ";
-                        this.alpha.Text = "A ";
-                        this.opacity.Text = "O ";*/
-                        paint_histogram = true;
-                        Invalidate();
-                    }
+                   // Later I'll add some code for points destruction
                 }
-
             }
         }
 

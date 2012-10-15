@@ -562,7 +562,7 @@ namespace vme
 
         public void Surface_MouseDown(object sender, MouseEventArgs e)
         {
-            if (imageAvailable == true){
+            if (imageAvailable){
                 if (e.Button == MouseButtons.Right){
                     ptWLDown.X = e.X;
                     ptWLDown.Y = e.Y;
@@ -583,7 +583,7 @@ namespace vme
         }
 
         public void Surface_MouseMove(object sender, MouseEventArgs e){
-            if (rightMouseDown == true){
+            if (rightMouseDown){
                 winShr1 = winWidth >> 1;
                 winWidth = winMax - winMin;
                 winCentre = winMin + winShr1;

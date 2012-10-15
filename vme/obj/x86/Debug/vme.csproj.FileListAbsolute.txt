@@ -316,3 +316,4 @@ E:\tsvme\repo\vme\bin\Debug\vme.pdb
 E:\tsvme\repo\vme\bin\Debug\OpenCLNet.dll
 E:\tsvme\repo\vme\obj\x86\Debug\vme.exe
 E:\tsvme\repo\vme\obj\x86\Debug\vme.pdb
+E:\tsvme\repo\vme\obj\x86\Debug\vme.csprojResolveAssemblyReference.cache

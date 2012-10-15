@@ -269,36 +269,6 @@ namespace vme
                 MessageBox.Show("Загрузите DICOM файл перед восстановлением параметров!");
         }
 
-        public void backward_Click(object sender, EventArgs e)
-        {
-            if (image_number > 1)
-            {
-                pixels16.Clear();
-                dec.EraseFields();
-                //ImagePlane.EraseFields();
-                image_number--;
-                //image_label.Text = path + image_number;
-                safename = "_" + image_number;
-                navi = true;
-                ReadAndDisplayDicomFile(path + safename, safename);
-            }
-        }
-
-        public void forward_Click(object sender, EventArgs e)
-        {
-            if (image_number < num_of_images)
-            {
-                pixels16.Clear();
-                dec.EraseFields();
-                //ImagePlane.EraseFields();
-                image_number++;
-                //image_label.Text = path + image_number;
-                safename = "_" + image_number;
-                navi = true;
-                ReadAndDisplayDicomFile(path + safename, safename);
-            }
-        }
-
         public void inkButton_Click(object sender, EventArgs e)
         {
             ColorDialog inkDialog = new ColorDialog();
@@ -346,6 +316,36 @@ namespace vme
                 num_of_images++;
             }
             image_number = num_of_images;
+        }
+
+        public void backward_Click(object sender, EventArgs e)
+        {
+            if (image_number > 1)
+            {
+                pixels16.Clear();
+                dec.EraseFields();
+                //ImagePlane.EraseFields();
+                image_number--;
+                //image_label.Text = path + image_number;
+                safename = "_" + image_number;
+                navi = true;
+                ReadAndDisplayDicomFile(path + safename, safename);
+            }
+        }
+
+        public void forward_Click(object sender, EventArgs e)
+        {
+            if (image_number < num_of_images)
+            {
+                pixels16.Clear();
+                dec.EraseFields();
+                //ImagePlane.EraseFields();
+                image_number++;
+                //image_label.Text = path + image_number;
+                safename = "_" + image_number;
+                navi = true;
+                ReadAndDisplayDicomFile(path + safename, safename);
+            }
         }
 
         public void volumeReconstruction_Click(object sender, EventArgs e)

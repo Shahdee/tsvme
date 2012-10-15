@@ -44,6 +44,9 @@
             this.Text = "TransferFunction";
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.TF_Paint);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.TF_MouseClick);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TF_MouseDown);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.TF_MouseUp);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.TF_MouseMove);
             this.ResumeLayout(false);
 
         }
