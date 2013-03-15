@@ -122,10 +122,13 @@ namespace vme
             roi.MdiParent = this;
             pr = new Presets();
             pr.MdiParent = this;
+            pl = new HSVpalette();
+            pl.MdiParent = this;
             view.Show(); // HERE IT IS
             tf.Show(); // HERE IT IS
             roi.Show();
             pr.Show();
+            pl.Show();
 
             imageWidth = dec.Width;
             imageHeight = dec.Height;

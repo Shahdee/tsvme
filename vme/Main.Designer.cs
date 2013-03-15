@@ -259,6 +259,7 @@
         private TransferFunction tf;
         private ROI roi;
         private Presets pr;
+        private HSVpalette pl;
         private System.Windows.Forms.Button AssignCA;
         //private ColoredTF ColoredTFobj; // I dont need it anymore
         private System.Windows.Forms.ColorDialog inkDialog;
