@@ -377,7 +377,7 @@ float4 TraceRayandGetPixelColor
 			//Проход луча
 			for(float t=k-5; t<kmax; t+=minst)
 			{
-			
+
 				precision=pos+t*direction;
 				if(valexist(precision.S0,precision.S1,precision.S2, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2)!=0)
 				{

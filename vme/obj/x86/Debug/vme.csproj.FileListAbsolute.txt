@@ -305,4 +305,3 @@ E:\tsvme\repo\vme\obj\x86\Debug\vme.Windowing.resources
 E:\tsvme\repo\vme\obj\x86\Debug\vme.csproj.GenerateResource.Cache
 E:\tsvme\repo\vme\obj\x86\Debug\vme.exe
 E:\tsvme\repo\vme\obj\x86\Debug\vme.pdb
-E:\tsvme\repo\vme\obj\x86\Debug\vme.csprojResolveAssemblyReference.cache
