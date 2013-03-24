@@ -189,8 +189,8 @@ float4 GetLightning(
  float exp,
  float kc,
  float kl,
- float kq,
- global ulong* voxelCounter
+ float kq
+ //,global ulong* voxelCounter
  )
 
 {
@@ -347,8 +347,8 @@ float4 TraceRayandGetPixelColor
  float exp,
  float kc,
  float kl,
- float kq,
- global ulong* voxelCounter
+ float kq
+ //, global ulong* voxelCounter
  )
  
 {
@@ -359,7 +359,7 @@ float4 TraceRayandGetPixelColor
 	// проверяем, пересекает ли луч наш бокс, если нет, то отсекаем этот случай
 	if( !intersect(pos,direction,boxMinCon, boxMaxCon, &kmin,&kmax) )
 	{
-		return (float4)(0.0f,0.0f,0.0f,0.0f);
+		return (float4)(1.0f,1.0f,1.0f,1.0f); // GBRA - bg color
 	}
 
 	const float step=5;
@@ -385,7 +385,7 @@ float4 TraceRayandGetPixelColor
 					float4 normal = GetGradient(precision, volume, size, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, winMin2, winMax2);
 
 					// расчет цвета пикселя, эмуляция модели освещения
-					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+					float4 truecolor= GetLightning(pos,precision, normal, light, volume, size, boxMinCon, boxMaxCon, winMin, winMax, interpolation, tf, colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq);  //, voxelCounter);
 					
 					
 					return (float4)(truecolor.s0, truecolor.S1, truecolor.S2, truecolor.S3);
@@ -396,7 +396,7 @@ float4 TraceRayandGetPixelColor
 		
 	}
 	
-	return (float4)(0.0f,0.0f,0.0f,0.0f);  // GBRA
+	return (float4)(0.0f,0.0f,0.0f,1.0f);   // GBRA - cube free space color
 }
 
 
@@ -462,8 +462,8 @@ kernel void DVR(
 			float exp,
 			float kc,
 			float kl,
-			float kq,
-			global ulong* voxelCounter) 
+			float kq)
+			//global ulong* voxelCounter) 
 {
 	// берем глобальный идентификатор work_item'a
 	size_t x=get_global_id(0);
@@ -477,7 +477,7 @@ kernel void DVR(
 	float4 direction = GetDirection(W,H,x,y,n,right,up);
 
 	// пускаем луч
-	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq, voxelCounter);
+	float4 col = TraceRayandGetPixelColor(pos, direction, volume, size, light, boxMinCon, boxMaxCon, winMin, winMax, carve, interpolation, tf ,colors, knots, winMin2, winMax2, winWidth, winCentre, kamb, kdiff, kspec, exp, kc, kl, kq);  //, voxelCounter);
 
 	// устанавливаем пиксель полученного цвета
     

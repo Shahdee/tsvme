@@ -253,7 +253,7 @@ namespace vme
 
         private void TestDataSet_Click(object sender, EventArgs e)
         {
-            path = "D:\\tsvme\\DICOM images\\my\\";
+            path = "E:\\tsvme\\DICOM images\\my\\";
          
             for (int i = 1; i < 167; i++)
             {
@@ -275,7 +275,7 @@ namespace vme
 
         private void test_head_Click(object sender, EventArgs e)
         {
-            path = "D:\\tsvme\\DICOM images\\kid\\";
+            path = "E:\\tsvme\\DICOM images\\kid\\";
 
             for (int i = 30; i < 190; i++)
             {

@@ -104,6 +104,9 @@
             this.VSurface.Paint += new System.Windows.Forms.PaintEventHandler(this.VSurface_Paint);
             this.VSurface.MouseMove += new System.Windows.Forms.MouseEventHandler(this.VSurface_MouseMove);
             this.VSurface.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.VSurface_MouseWheel);
+            this.VSurface.MouseDown +=new System.Windows.Forms.MouseEventHandler(this.VSurface_MouseDown);
+            this.VSurface.MouseUp +=new System.Windows.Forms.MouseEventHandler(VSurface_MouseUp);
+
             // 
             // left
             // 

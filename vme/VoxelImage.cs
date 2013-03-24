@@ -22,7 +22,13 @@ namespace vme
         private bool leftChange;
         private bool rightChange;
         private bool changeDistance;
-        private Bitmap output = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb);
+        
+        private static int m_res = 1024;
+        private static float m_degrees = 360;
+
+        private bool m_mouseDown=false;
+
+        private Bitmap output = new Bitmap(m_res, m_res, PixelFormat.Format32bppArgb);
         private VoxelVolume vol;
         private Float4 camPos;
         private Float4 camPosOld;
@@ -40,17 +46,16 @@ namespace vme
         private OpenCLManager manager;
         private OpenCLNet.Program program;
         private Kernel kernel;
-        private Point oldMousePos;
+        private Point m_oldMousePos;
         private Main form_this;
         private int winWidth_vox;
         private int winCentre_vox;
         private Mem outputBuffer;
         private Mem color_buffer;
         private Mem opacity;
-        private Mem counter;
+ 
         private Stopwatch clock;
         private ulong voxelctr, realctr;
-
         
         public VoxelImage()
         {
@@ -162,10 +167,8 @@ namespace vme
                     }
 
                 }
-                GC.Collect();
             }
-            GC.Collect();
-            camfactorX = 2;
+             camfactorX = 2;
             //camfactorY = 2;
             camfactorZ = 2;
         }
@@ -207,9 +210,7 @@ namespace vme
                     }
 
                 }
-                GC.Collect();
             }
-            GC.Collect();
             camfactorX = 2;
             //camfactorY = 2;
             camfactorZ = 2;
@@ -236,7 +237,7 @@ namespace vme
             return opacity;
         }
 
-        
+        /*
         private unsafe Mem GetCounter() 
         {
             fixed (ulong* dataptr = &voxelctr)
@@ -244,7 +245,7 @@ namespace vme
                 counter = manager.Context.CreateBuffer(MemFlags.READ_WRITE, 8, new IntPtr(dataptr));
             }
             return counter;
-        }
+        }*/
 
         private unsafe void DoRayCasting(BitmapData output)
         {
@@ -388,7 +389,7 @@ namespace vme
                         kernel.SetArg(29, kkc);
                         kernel.SetArg(30, kkl);
                         kernel.SetArg(31, kkq);
-                        kernel.SetArg(32, GetCounter());
+                        //kernel.SetArg(32, GetCounter());
                   
                         /* Ставит в очередь команду для исполнения kernel на устройстве */
                         /*
@@ -410,11 +411,11 @@ namespace vme
 
                 /* для того чтобы получить доступ к памяти и записать в выходное изображение мы просим у OpenCL *наложить* данные в хост-устройство */
                 IntPtr p = manager.CQ[deviceIndex].EnqueueMapBuffer(outputBuffer, true, MapFlags.READ, IntPtr.Zero, (IntPtr)(output.Stride * output.Height));
-                IntPtr z = manager.CQ[deviceIndex].EnqueueMapBuffer(counter, true, MapFlags.READ_WRITE, IntPtr.Zero, (IntPtr)(sizeof(ulong)));
+                //IntPtr z = manager.CQ[deviceIndex].EnqueueMapBuffer(counter, true, MapFlags.READ_WRITE, IntPtr.Zero, (IntPtr)(sizeof(ulong)));
             
                 /* когда мы заканчиваем работать с буфером надо вызвать эту функцию */
                 manager.CQ[deviceIndex].EnqueueUnmapMemObject(outputBuffer, p);
-                manager.CQ[deviceIndex].EnqueueUnmapMemObject(counter, z);
+                //manager.CQ[deviceIndex].EnqueueUnmapMemObject(counter, z);
                 manager.CQ[deviceIndex].Finish();
                 realctr += voxelctr;
                 voxelCounter.Text = Convert.ToString(realctr);
@@ -422,14 +423,13 @@ namespace vme
             catch (Exception ex)
             {
                 MessageBox.Show("Ray casting exception:" + ex.Message, "Exception");
-                Environment.Exit(-1);
+                //Environment.Exit(-1);
             }
             finally
             {
                 if (outputBuffer != null)
                 {
                     outputBuffer.Dispose();
-
                 }
             }
 
@@ -502,17 +502,12 @@ namespace vme
          
         }
 
-        private void RotateCameraRight()
-        {
-            first = false;
-            camAngle = 10;
-        }
 
-        private void RotateCameraLeft()
+        private void RotateCamera(int dx = 100)
         {
             first = false;
-            camAngle = 10;
-         }
+            camAngle = (m_degrees / m_res) * dx;
+        }
 
         private void ZoomIn() 
         {
@@ -553,7 +548,7 @@ namespace vme
         {
             angleChange = true;
             leftChange = true;
-            RotateCameraLeft();
+            RotateCamera();
     
             if (initialize)
             {
@@ -566,12 +561,60 @@ namespace vme
         {
             angleChange = true;
             rightChange = true;
-            RotateCameraRight();
+            RotateCamera();
 
             if (initialize)
             {
                 Draw();
                 VSurface.Refresh();
+            }
+        }
+
+        private void VSurface_MouseDown(object sender, MouseEventArgs e) 
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                m_mouseDown = true;
+                m_oldMousePos.X = e.Location.X;
+            }
+        }
+
+        private void VSurface_MouseUp(object sender, MouseEventArgs e) 
+        {
+            m_mouseDown = false; 
+        }
+
+        private void VSurface_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (m_mouseDown)
+            {
+                if (m_oldMousePos != null)
+                {
+                    int movementX = Math.Abs(e.Location.X - m_oldMousePos.X);
+
+                    if (e.Location.X > m_oldMousePos.X)
+                    {
+                        angleChange = true;
+                        rightChange = true;
+                    }
+                    else
+                    {
+                        angleChange = true;
+                        leftChange = true;
+                    }
+                    RotateCamera(-movementX);
+                    m_oldMousePos = e.Location;
+
+                    if (initialize)
+                    {
+                        Draw();
+                        VSurface.Refresh();
+                    }
+                }
+            }
+            else 
+            {
+                m_oldMousePos = e.Location;
             }
         }
 
@@ -634,39 +677,6 @@ namespace vme
             }
 
         }
-
-        private void VSurface_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                if (oldMousePos != null)
-                {
-                    int horizontalMovement = e.Location.X - oldMousePos.X;
-
-                    if (horizontalMovement > 0)
-                    {
-                        angleChange = true;
-                        leftChange = true;
-                        RotateCameraLeft();
-                      
-                    }
-                    if (horizontalMovement < 0)
-                    {
-                        angleChange = true;
-                        rightChange = true;
-                        RotateCameraRight();
-                    }
-
-                    if (initialize)
-                    {
-                        Draw();
-                        VSurface.Refresh();
-                    }
-                }
-                oldMousePos = e.Location;
-            }
-        }
-
 
     #endregion
 
