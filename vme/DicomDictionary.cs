@@ -779,7 +779,7 @@ namespace vme
             {"00541400", "CSCounts Included"},
             {"00541401", "CSDead Time Correction Flag"},
         
-            {"7FE00010", "OBPixel Data"}, // то что мне нужно
+            {"7FE00010", "OBPixel Data"},
 
             {"FFFEE000", "DLItem"},
             {"FFFEE00D", "DLItem Delimitation Item"},

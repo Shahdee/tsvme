@@ -28,31 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Open = new System.Windows.Forms.Button();
             this.Reset = new System.Windows.Forms.Button();
             this.AssignCA = new System.Windows.Forms.Button();
-            this.volume = new System.Windows.Forms.Button();
             this.image_label = new System.Windows.Forms.Label();
-            this.test_chest = new System.Windows.Forms.Button();
             this.backward = new System.Windows.Forms.Button();
             this.forward = new System.Windows.Forms.Button();
-            this.test_head = new System.Windows.Forms.Button();
+            this.inkDialog = new System.Windows.Forms.ColorDialog();
+            this.inkButton = new System.Windows.Forms.Button();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.openDicom = new System.Windows.Forms.ToolStripMenuItem();
+            this.openChest = new System.Windows.Forms.ToolStripMenuItem();
+            this.openKid = new System.Windows.Forms.ToolStripMenuItem();
+            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.volumeReconstruction = new System.Windows.Forms.ToolStripMenuItem();
             this.ColoredTFobj = new vme.ColoredTF();
             this.Windowing = new vme.Windowing();
             this.ImagePlane = new vme.Canvas();
-            this.inkDialog = new System.Windows.Forms.ColorDialog();
-            this.inkButton = new System.Windows.Forms.Button();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // Open
-            // 
-            this.Open.Location = new System.Drawing.Point(36, 22);
-            this.Open.Name = "Open";
-            this.Open.Size = new System.Drawing.Size(107, 36);
-            this.Open.TabIndex = 0;
-            this.Open.Text = "Открыть DICOM ";
-            this.Open.UseVisualStyleBackColor = true;
-            this.Open.Click += new System.EventHandler(this.Open_Click);
             // 
             // Reset
             // 
@@ -60,7 +54,7 @@
             this.Reset.Name = "Reset";
             this.Reset.Size = new System.Drawing.Size(95, 35);
             this.Reset.TabIndex = 4;
-            this.Reset.Text = "По умолч. область ";
+            this.Reset.Text = "Default ROI";
             this.Reset.UseVisualStyleBackColor = true;
             this.Reset.Click += new System.EventHandler(this.Reset_Click);
             // 
@@ -73,34 +67,14 @@
             this.AssignCA.Text = "Присвоить ц/п";
             this.AssignCA.UseVisualStyleBackColor = true;
             // 
-            // volume
-            // 
-            this.volume.Location = new System.Drawing.Point(662, 30);
-            this.volume.Name = "volume";
-            this.volume.Size = new System.Drawing.Size(75, 30);
-            this.volume.TabIndex = 7;
-            this.volume.Text = "3D";
-            this.volume.UseVisualStyleBackColor = true;
-            this.volume.Click += new System.EventHandler(this.volume_Click);
-            // 
             // image_label
             // 
             this.image_label.AutoSize = true;
-            this.image_label.Location = new System.Drawing.Point(863, 39);
+            this.image_label.Location = new System.Drawing.Point(659, 30);
             this.image_label.Name = "image_label";
-            this.image_label.Size = new System.Drawing.Size(77, 13);
+            this.image_label.Size = new System.Drawing.Size(63, 13);
             this.image_label.TabIndex = 8;
-            this.image_label.Text = "Изображение";
-            // 
-            // test_chest
-            // 
-            this.test_chest.Location = new System.Drawing.Point(173, 22);
-            this.test_chest.Name = "test_chest";
-            this.test_chest.Size = new System.Drawing.Size(75, 36);
-            this.test_chest.TabIndex = 9;
-            this.test_chest.Text = "грудная клетка - тест";
-            this.test_chest.UseVisualStyleBackColor = true;
-            this.test_chest.Click += new System.EventHandler(this.TestDataSet_Click);
+            this.image_label.Text = "Image path:";
             // 
             // backward
             // 
@@ -108,7 +82,7 @@
             this.backward.Name = "backward";
             this.backward.Size = new System.Drawing.Size(75, 36);
             this.backward.TabIndex = 10;
-            this.backward.Text = "В начало";
+            this.backward.Text = "Backward";
             this.backward.UseVisualStyleBackColor = true;
             this.backward.Click += new System.EventHandler(this.backward_Click);
             // 
@@ -118,19 +92,79 @@
             this.forward.Name = "forward";
             this.forward.Size = new System.Drawing.Size(75, 36);
             this.forward.TabIndex = 11;
-            this.forward.Text = "В конец";
+            this.forward.Text = "Forward";
             this.forward.UseVisualStyleBackColor = true;
             this.forward.Click += new System.EventHandler(this.forward_Click);
             // 
-            // test_head
+            // inkDialog
             // 
-            this.test_head.Location = new System.Drawing.Point(255, 22);
-            this.test_head.Name = "test_head";
-            this.test_head.Size = new System.Drawing.Size(75, 36);
-            this.test_head.TabIndex = 12;
-            this.test_head.Text = "голова - тест";
-            this.test_head.UseVisualStyleBackColor = true;
-            this.test_head.Click += new System.EventHandler(this.test_head_Click);
+            this.inkDialog.Color = System.Drawing.Color.OrangeRed;
+            // 
+            // inkButton
+            // 
+            this.inkButton.Location = new System.Drawing.Point(1126, 30);
+            this.inkButton.Name = "inkButton";
+            this.inkButton.Size = new System.Drawing.Size(75, 30);
+            this.inkButton.TabIndex = 13;
+            this.inkButton.Text = "Ink ";
+            this.inkButton.UseVisualStyleBackColor = true;
+            this.inkButton.Click += new System.EventHandler(this.inkButton_Click);
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.editToolStripMenuItem,
+            this.volumeReconstruction});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1213, 24);
+            this.menuStrip1.TabIndex = 14;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openDicom,
+            this.openChest,
+            this.openKid});
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(37, 20);
+            this.toolStripMenuItem1.Text = "File";
+            // 
+            // openDicom
+            // 
+            this.openDicom.Name = "openDicom";
+            this.openDicom.Size = new System.Drawing.Size(164, 22);
+            this.openDicom.Text = "Open DICOM file";
+            this.openDicom.Click += new System.EventHandler(this.openDicom_Click);
+            // 
+            // openChest
+            // 
+            this.openChest.Name = "openChest";
+            this.openChest.Size = new System.Drawing.Size(164, 22);
+            this.openChest.Text = "Open my chest";
+            this.openChest.Click += new System.EventHandler(this.openChest_Click);
+            // 
+            // openKid
+            // 
+            this.openKid.Name = "openKid";
+            this.openKid.Size = new System.Drawing.Size(164, 22);
+            this.openKid.Text = "Open kid\'s head ";
+            this.openKid.Click += new System.EventHandler(this.openKid_Click);
+            // 
+            // editToolStripMenuItem
+            // 
+            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+            this.editToolStripMenuItem.Text = "Edit";
+            // 
+            // volumeReconstruction
+            // 
+            this.volumeReconstruction.Name = "volumeReconstruction";
+            this.volumeReconstruction.Size = new System.Drawing.Size(33, 20);
+            this.volumeReconstruction.Text = "3D";
+            this.volumeReconstruction.Click += new System.EventHandler(this.volumeReconstruction_Click);
             // 
             // ColoredTFobj
             // 
@@ -158,20 +192,6 @@
             this.ImagePlane.Size = new System.Drawing.Size(539, 539);
             this.ImagePlane.TabIndex = 1;
             // 
-            // inkDialog
-            // 
-            this.inkDialog.Color = System.Drawing.Color.OrangeRed;
-            // 
-            // inkButton
-            // 
-            this.inkButton.Location = new System.Drawing.Point(1126, 30);
-            this.inkButton.Name = "inkButton";
-            this.inkButton.Size = new System.Drawing.Size(75, 30);
-            this.inkButton.TabIndex = 13;
-            this.inkButton.Text = "Заливка";
-            this.inkButton.UseVisualStyleBackColor = true;
-            this.inkButton.Click += new System.EventHandler(this.inkButton_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -180,21 +200,21 @@
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1213, 640);
             this.Controls.Add(this.inkButton);
-            this.Controls.Add(this.test_head);
             this.Controls.Add(this.forward);
             this.Controls.Add(this.backward);
-            this.Controls.Add(this.test_chest);
             this.Controls.Add(this.image_label);
-            this.Controls.Add(this.volume);
             this.Controls.Add(this.ColoredTFobj);
             this.Controls.Add(this.Windowing);
             this.Controls.Add(this.Reset);
             this.Controls.Add(this.ImagePlane);
-            this.Controls.Add(this.Open);
+            this.Controls.Add(this.menuStrip1);
             this.KeyPreview = true;
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "vme";
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -202,21 +222,24 @@
 
         #endregion
 
-        private System.Windows.Forms.Button Open;
         private Canvas ImagePlane;
         private System.Windows.Forms.Button Reset;
         private System.Windows.Forms.Button AssignCA;
         private Windowing Windowing;
         private ColoredTF ColoredTFobj;
-        private System.Windows.Forms.Button volume;
         private System.Windows.Forms.Label image_label;
-        private System.Windows.Forms.Button test_chest;
         private System.Windows.Forms.Button backward;
         private System.Windows.Forms.Button forward;
-        private System.Windows.Forms.Button test_head;
         private System.Windows.Forms.ColorDialog inkDialog;
         private System.Windows.Forms.Button inkDialogButton;
         private System.Windows.Forms.Button inkButton;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem openDicom;
+        private System.Windows.Forms.ToolStripMenuItem openChest;
+        private System.Windows.Forms.ToolStripMenuItem openKid;
+        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem volumeReconstruction;
         
     }
 }
