@@ -10,16 +10,13 @@ namespace vme
     {
         public JpegDictionary jdic;  // словарь маркеров 
 
-        public JpgParameters()
-        {
+        public JpgParameters(){
             jdic = new JpegDictionary();
 
             tree = new TBinarySTree();  // новое дерево Хаффмана
 
             ptr = 0;  // указатель для массива сегмента ecs
-
         }
-
 
         public ushort commentLength;
         public List<byte> comment;
@@ -43,9 +40,7 @@ namespace vme
         public List<byte> EHUFSI;
         public int ptr;
 
-
         /*SOF - Описание кадра */
-
 
         public ushort frameLength; // длина кадра
         public byte P;     // точность сэмпла
@@ -79,10 +74,8 @@ namespace vme
         public List<byte> esc;
         public List<int> dc;
        
-        
         public int lastK;
         
-
         /* DNL Segment */
         public ushort dnlLength;
         public ushort numLines;

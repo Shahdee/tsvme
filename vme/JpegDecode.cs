@@ -24,7 +24,6 @@ namespace vme
 
     class JpegDecode
     {
-
         public JpgParameters property;
         private int  pos;
         private Marker type;
@@ -126,6 +125,7 @@ namespace vme
         
         }
 
+        /* Retrieve entropy codede segment*/
         private void RetrieveECS(byte[] frag, ref int i, int elementLength)
          {
              property.esc = new List<byte>();
@@ -150,7 +150,6 @@ namespace vme
              }
          
          }
-
 
         /* Извлекает заголовок скана изображения */
          private void RetrieveScanHeader(byte[] frag, ref int i, int elementLength) 
@@ -224,13 +223,10 @@ namespace vme
         private void BuildHuffmanTree(ref TreeNode root, ref int ctr, int acc, ref int path, ref int i, string code)
         {
 
-            
             while (ctr < acc) // пока мы не заполнили все дерево
             {
-
                 if (root == null)
                 {
-
                     root = new TreeNode();
                     path++;
                     // если мы достигли нужной глубины дерева (то есть длины кода, которая приходится на значение)
@@ -360,7 +356,6 @@ namespace vme
             }
 
         }
-
          
         /* Извлекает таблицу Хаффмана */
         private void RetrieveHuffmanTable(byte[] frag, ref int i)
@@ -496,8 +491,6 @@ namespace vme
         
         }
 
-      
-        
         private void DecoderTableGeneration() 
         {
             property.MinCode = new int[17];
@@ -544,12 +537,9 @@ namespace vme
             byte cnt = 0;
             int T = 0;
 
-
             while(property.ptr < property.esc.Count)
             {
-                    
                 property.dc.Add(Decode(ref cnt));
-                
             }
         }
         
@@ -579,7 +569,8 @@ namespace vme
         }
          
         
-       /*
+       /* Places next ssss bits into the low order of bits with MSB first. It calls NEXTBIT and it returns the value of DIFF to the calling procedure  */
+        /*
         private int ReceiveSSSS(int ssss)
         {
             int l = 0;
@@ -591,7 +582,8 @@ namespace vme
             }
             return v;
         }
-        */
+         * */
+        
 
         private byte NextByte() 
         {
@@ -602,16 +594,17 @@ namespace vme
                 
             }
             return 0; // 
-        
         }
 
+        /* NEXTBIT reads the next bit of compressed data and passes it to higher level routines. It also intercepts and removes stuff bytes and detects markers.
+         NEXTBIT reads the bits of a byte starting with a MSB
+         */
         private int NextBit(ref byte cnt, ref byte by1) // учесть предыдущий байт!
         {
 
             int i = 0;
             byte by2=0;
             int bit=0;
-
 
             if (cnt == 0)
             {

@@ -10,7 +10,6 @@ namespace vme
 {
     class DicomDecoder
     {
-
         const uint PIXEL_REPRESENTATION = 0x00280103;
         const uint TRANSFER_SYNTAX_UID = 0x00020010;
         const uint MODALITY = 0x00080060;
@@ -34,22 +33,19 @@ namespace vme
         const uint ICON_IMAGE_SEQUENCE = 0x00880200;
         const uint PIXEL_DATA = 0x7FE00010;
 
-        //There are three special SQ related Data Elements that are not ruled by the VR encoding rules conveyed by the Transfer Syntax. They shall be encoded as Implicit VR. NEMA DICOM 3.0
+        /*There are three special SQ related Data Elements that are not ruled by the VR encoding rules
+        conveyed by the Transfer Syntax. They shall be encoded as Implicit VR. NEMA DICOM 3.0*/
         const string ITEM = "FFFEE000";
         const string ITEM_DELIMITATION = "FFFEE00D";
         const string SEQUENCE_DELIMITATION = "FFFEE0DD";
         //----
 
         //String dicomFileName;
-
         const int FIRST_OFFSET = 128;
         const string DICM = "DICM";
-
-
+        
         DicomDictionary dic;
-
         /* Все что относится к декодированию jpg lossless */
-
         JpegDecode jdec;   // декодировщик для jpg lossless см. ISO/IS 10918-1 и 10918-2
         private byte[] frag;
        
@@ -66,7 +62,6 @@ namespace vme
         bool littleEndian = true; // by default
 
         // bool metaHeader = true;
-
         int elementLength; // because can be negative despite the fact that is a length value
         uint vr; // Value Representation
         uint tag;
@@ -104,8 +99,6 @@ namespace vme
             QQ = 0x3F3F;
 
         const int IMPLICIT_VR = 0x2D2D; 
-
-
         public ushort bitsAllocated;
         public int width;
         public int height;

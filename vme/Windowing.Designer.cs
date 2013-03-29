@@ -43,18 +43,18 @@
             this.label4.ForeColor = System.Drawing.Color.OliveDrab;
             this.label4.Location = new System.Drawing.Point(181, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(128, 16);
+            this.label4.Size = new System.Drawing.Size(31, 16);
             this.label4.TabIndex = 5;
-            this.label4.Text = "Область интереса";
+            this.label4.Text = "ROI";
             // 
             // text_max
             // 
             this.text_max.AutoSize = true;
             this.text_max.Location = new System.Drawing.Point(380, 84);
             this.text_max.Name = "text_max";
-            this.text_max.Size = new System.Drawing.Size(37, 13);
+            this.text_max.Size = new System.Drawing.Size(27, 13);
             this.text_max.TabIndex = 15;
-            this.text_max.Text = "Макс.";
+            this.text_max.Text = "Max";
             // 
             // text_centre
             // 
@@ -63,25 +63,25 @@
             this.text_centre.Name = "text_centre";
             this.text_centre.Size = new System.Drawing.Size(38, 13);
             this.text_centre.TabIndex = 14;
-            this.text_centre.Text = "Центр";
+            this.text_centre.Text = "Centre";
             // 
             // text_min
             // 
             this.text_min.AutoSize = true;
             this.text_min.Location = new System.Drawing.Point(380, 113);
             this.text_min.Name = "text_min";
-            this.text_min.Size = new System.Drawing.Size(31, 13);
+            this.text_min.Size = new System.Drawing.Size(24, 13);
             this.text_min.TabIndex = 13;
-            this.text_min.Text = "Мин.";
+            this.text_min.Text = "Min";
             // 
             // text_width
             // 
             this.text_width.AutoSize = true;
             this.text_width.Location = new System.Drawing.Point(380, 30);
             this.text_width.Name = "text_width";
-            this.text_width.Size = new System.Drawing.Size(46, 13);
+            this.text_width.Size = new System.Drawing.Size(35, 13);
             this.text_width.TabIndex = 12;
-            this.text_width.Text = "Ширина";
+            this.text_width.Text = "Width";
             // 
             // Windowing
             // 

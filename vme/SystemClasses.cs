@@ -10,6 +10,7 @@ namespace vme
 {
     public enum Imagebpp { Eightbpp, Sixteenbpp };
 
+    #region BinaryTree
     /* Бинарное дерево */
     public class TreeNode
     {
@@ -37,6 +38,8 @@ namespace vme
         }
     }
 
+    #endregion
+
     public struct Knot 
     {
         public Point p;
@@ -44,7 +47,6 @@ namespace vme
     }
 
    
-
     public class VoxelVolume 
     {
         private readonly short[] data;
