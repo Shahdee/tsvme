@@ -30,15 +30,10 @@ D:\tsvme\repo\vme\vme\obj\x86\Debug\vme.pdb
 D:\tsvme\repo\vme\bin\Debug\vme.exe.config
 D:\tsvme\repo\vme\bin\Debug\vme.exe
 D:\tsvme\repo\vme\bin\Debug\vme.pdb
-D:\tsvme\repo\vme\obj\x86\Debug\ResolveAssemblyReference.cache
 D:\tsvme\repo\vme\obj\x86\Debug\vme.Canvas.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.ColoredTF.resources
-D:\tsvme\repo\vme\obj\x86\Debug\vme.Histogram.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.Main.resources
 D:\tsvme\repo\vme\obj\x86\Debug\vme.Properties.Resources.resources
-D:\tsvme\repo\vme\obj\x86\Debug\vme.TransferFunction.resources
-D:\tsvme\repo\vme\obj\x86\Debug\ResGen.read.1.tlog
-D:\tsvme\repo\vme\obj\x86\Debug\ResGen.write.1.tlog
 D:\tsvme\repo\vme\obj\x86\Debug\vme.exe
 D:\tsvme\repo\vme\obj\x86\Debug\vme.pdb
 E:\tsvme\repo2\vme\bin\Debug\vme.exe.config
@@ -305,4 +300,8 @@ E:\tsvme\repo\vme\obj\x86\Debug\vme.Windowing.resources
 E:\tsvme\repo\vme\obj\x86\Debug\vme.csproj.GenerateResource.Cache
 E:\tsvme\repo\vme\obj\x86\Debug\vme.exe
 E:\tsvme\repo\vme\obj\x86\Debug\vme.pdb
-E:\tsvme\repo\vme\obj\x86\Debug\vme.csprojResolveAssemblyReference.cache
+D:\tsvme\repo\vme\bin\Debug\OpenCLNet.dll
+D:\tsvme\repo\vme\obj\x86\Debug\vme.VoxelImage.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.Windowing.resources
+D:\tsvme\repo\vme\obj\x86\Debug\vme.csproj.GenerateResource.Cache
+D:\tsvme\repo\vme\obj\x86\Debug\vme.csprojResolveAssemblyReference.cache

@@ -23,16 +23,9 @@ D:\tsvme\repo\vme\obj\x86\Release\vme.exe
 D:\tsvme\repo\vme\obj\x86\Release\vme.pdb
 D:\tsvme\repo\vme\bin\Release\vme.exe
 D:\tsvme\repo\vme\bin\Release\vme.pdb
-D:\tsvme\repo\vme\obj\x86\Release\ResolveAssemblyReference.cache
 D:\tsvme\repo\vme\obj\x86\Release\vme.Canvas.resources
-D:\tsvme\repo\vme\obj\x86\Release\vme.Histogram.resources
 D:\tsvme\repo\vme\obj\x86\Release\vme.Main.resources
 D:\tsvme\repo\vme\obj\x86\Release\vme.Properties.Resources.resources
-D:\tsvme\repo\vme\obj\x86\Release\vme.TransferFunction.resources
-D:\tsvme\repo\vme\obj\x86\Release\GenerateResource.read.1.tlog
-D:\tsvme\repo\vme\obj\x86\Release\ResGen.read.1.tlog
-D:\tsvme\repo\vme\obj\x86\Release\GenerateResource.write.1.tlog
-D:\tsvme\repo\vme\obj\x86\Release\ResGen.write.1.tlog
 E:\tsvme\vme21\vme\bin\Release\vme.exe.config
 E:\tsvme\vme21\vme\obj\x86\Release\vme.exe
 E:\tsvme\vme21\vme\obj\x86\Release\vme.pdb
@@ -120,3 +113,9 @@ D:\tsvme\repo10\vme\obj\x86\Release\ResGen.read.1.tlog
 D:\tsvme\repo10\vme\obj\x86\Release\GenerateResource-ResGen.write.1.tlog
 D:\tsvme\repo10\vme\obj\x86\Release\GenerateResource.write.1.tlog
 D:\tsvme\repo10\vme\obj\x86\Release\ResGen.write.1.tlog
+D:\tsvme\repo\vme\bin\Release\OpenCLNet.dll
+D:\tsvme\repo\vme\obj\x86\Release\vme.csprojResolveAssemblyReference.cache
+D:\tsvme\repo\vme\obj\x86\Release\vme.ColoredTF.resources
+D:\tsvme\repo\vme\obj\x86\Release\vme.VoxelImage.resources
+D:\tsvme\repo\vme\obj\x86\Release\vme.Windowing.resources
+D:\tsvme\repo\vme\obj\x86\Release\vme.csproj.GenerateResource.Cache
